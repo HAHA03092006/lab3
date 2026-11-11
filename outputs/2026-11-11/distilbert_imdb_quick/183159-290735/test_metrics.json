@@ -1,0 +1,62 @@
+{
+  "accuracy": 0.862,
+  "precision": 0.8678861788617886,
+  "recall": 0.854,
+  "f1": 0.8608870967741935,
+  "macro_f1": 0.8619911674347158,
+  "num_samples": 1000,
+  "confusion_matrix": [
+    [
+      435,
+      65
+    ],
+    [
+      73,
+      427
+    ]
+  ],
+  "roc_auc": 0.931748,
+  "trainer_metrics": {
+    "test_loss": 0.34188032150268555,
+    "test_accuracy": 0.862,
+    "test_precision": 0.8678861788617886,
+    "test_recall": 0.854,
+    "test_f1": 0.8608870967741935,
+    "test_macro_f1": 0.8619911674347158,
+    "test_runtime": 43.3233,
+    "test_samples_per_second": 23.082,
+    "test_steps_per_second": 0.739
+  },
+  "metadata": {
+    "run_id": "distilbert_imdb_quick",
+    "profile": "quick",
+    "config": {
+      "run_id": "distilbert_imdb_quick",
+      "model_id": "distilbert/distilbert-base-uncased",
+      "model_revision": "main",
+      "dataset_id": "stanfordnlp/imdb",
+      "dataset_revision": "main",
+      "profile": "quick",
+      "seed": 42,
+      "val_size": 5000,
+      "train_limit": 2000,
+      "val_limit": 500,
+      "test_limit": 1000,
+      "max_length": 128,
+      "epochs": 2,
+      "batch_size": 16,
+      "eval_batch_size": 32,
+      "learning_rate": 2e-05,
+      "weight_decay": 0.01,
+      "warmup_ratio": 0.1,
+      "gradient_accumulation_steps": 1,
+      "max_grad_norm": 1.0
+    },
+    "data_sha256": "bfc80e87a0fca40a7d8638910ff73e74a3bde09c7fda4a15b33bb40cfa27a14c",
+    "duplicate_text_overlap": {
+      "train__validation": 0,
+      "train__test": 0,
+      "validation__test": 0
+    }
+  }
+}

@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/
+data/
+cache/
+logs/
+artifacts/**/checkpoints/
+artifacts/**/best_model/
+*.safetensors
+*.bin
+*.pt
+*.pth
+outputs/**/predictions.csv
+outputs/**/errors.csv

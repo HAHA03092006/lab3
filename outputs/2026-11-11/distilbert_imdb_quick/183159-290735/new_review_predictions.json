@@ -1,0 +1,16 @@
+[
+  {
+    "text": "A moving story with excellent performances.",
+    "label_id": 1,
+    "label": "POSITIVE",
+    "confidence": 0.9305256009101868,
+    "p_positive": 0.9305256009101868
+  },
+  {
+    "text": "I regret spending time on this dull movie.",
+    "label_id": 0,
+    "label": "NEGATIVE",
+    "confidence": 0.8756021857261658,
+    "p_positive": 0.12439781427383423
+  }
+]

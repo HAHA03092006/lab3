@@ -1,0 +1,52 @@
+{
+  "model": "distilbert/distilbert-base-uncased-finetuned-sst-2-english",
+  "revision": "714eb0fa89d2f80546fda750413ed43d93601a13",
+  "manual": [
+    {
+      "text": "I really enjoyed this movie. The acting was wonderful!",
+      "label_id": 1,
+      "label": "POSITIVE",
+      "confidence": 0.9998778104782104,
+      "p_positive": 0.9998778104782104
+    },
+    {
+      "text": "The plot was boring and the dialogue was terrible.",
+      "label_id": 0,
+      "label": "NEGATIVE",
+      "confidence": 0.9998095631599426,
+      "p_positive": 0.0001904821692733094
+    },
+    {
+      "text": "The movie was not bad at all.",
+      "label_id": 1,
+      "label": "POSITIVE",
+      "confidence": 0.9979925155639648,
+      "p_positive": 0.9979925155639648
+    },
+    {
+      "text": "Great actors, but I disliked the ending.",
+      "label_id": 0,
+      "label": "NEGATIVE",
+      "confidence": 0.9869480133056641,
+      "p_positive": 0.013051975518465042
+    }
+  ],
+  "pipeline": [
+    {
+      "label": "POSITIVE",
+      "score": 0.9998778104782104
+    },
+    {
+      "label": "NEGATIVE",
+      "score": 0.9998095631599426
+    },
+    {
+      "label": "POSITIVE",
+      "score": 0.9979925155639648
+    },
+    {
+      "label": "NEGATIVE",
+      "score": 0.9869480133056641
+    }
+  ]
+}

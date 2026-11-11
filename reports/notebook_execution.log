@@ -1,0 +1,23 @@
+START cell 2 elapsed 0
+END cell 2 elapsed 0 ERROR None
+START cell 3 elapsed 0
+END cell 3 elapsed 0 ERROR None
+START cell 4 elapsed 0
+END cell 4 elapsed 9 ERROR None
+START cell 6 elapsed 9
+END cell 6 elapsed 41 ERROR None
+START cell 7 elapsed 41
+END cell 7 elapsed 41 ERROR None
+START cell 9 elapsed 41
+END cell 9 elapsed 59 ERROR None
+START cell 11 elapsed 59
+END cell 11 elapsed 63 ERROR None
+START cell 13 elapsed 63
+END cell 13 elapsed 869 ERROR None
+START cell 14 elapsed 869
+END cell 14 elapsed 870 ERROR None
+START cell 16 elapsed 870
+END cell 16 elapsed 914 ERROR None
+START cell 18 elapsed 914
+END cell 18 elapsed 914 ERROR None
+EXECUTION_OK 913.8742685317993

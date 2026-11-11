@@ -1,0 +1,58 @@
+{
+  "contract": {
+    "run_config": {
+      "run_id": "distilbert_imdb_quick",
+      "model_id": "distilbert/distilbert-base-uncased",
+      "model_revision": "main",
+      "dataset_id": "stanfordnlp/imdb",
+      "dataset_revision": "main",
+      "profile": "quick",
+      "seed": 42,
+      "val_size": 5000,
+      "train_limit": 2000,
+      "val_limit": 500,
+      "test_limit": 1000,
+      "max_length": 128,
+      "epochs": 2,
+      "batch_size": 16,
+      "eval_batch_size": 32,
+      "learning_rate": 2e-05,
+      "weight_decay": 0.01,
+      "warmup_ratio": 0.1,
+      "gradient_accumulation_steps": 1,
+      "max_grad_norm": 1.0
+    },
+    "data_sha256": "bfc80e87a0fca40a7d8638910ff73e74a3bde09c7fda4a15b33bb40cfa27a14c",
+    "tokenizer": {
+      "name": "distilbert/distilbert-base-uncased",
+      "vocab_sha256": "42d9f11fe768a36795d5faa23f3ef03fa6eedd07f8082549061a49f9f7e3ba4d",
+      "special_tokens": {
+        "unk_token": "[UNK]",
+        "sep_token": "[SEP]",
+        "pad_token": "[PAD]",
+        "cls_token": "[CLS]",
+        "mask_token": "[MASK]"
+      },
+      "padding_side": "right",
+      "truncation_side": "right"
+    }
+  },
+  "environment": {
+    "python": "3.12.14",
+    "cuda_available": false,
+    "device": "CPU",
+    "torch": "2.15.0+cpu",
+    "transformers": "4.57.1",
+    "datasets": "4.3.0",
+    "evaluate": "0.4.6",
+    "accelerate": "1.11.0",
+    "numpy": "2.5.4",
+    "scikit-learn": "1.9.1"
+  },
+  "parameters": {
+    "total": 66955010,
+    "trainable": 66955010,
+    "frozen": 0
+  },
+  "resolved_model_revision": "12040accade4e8a0f71eabdb258fecc2e7e948be"
+}

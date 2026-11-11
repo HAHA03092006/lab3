@@ -1,0 +1,6 @@
+{
+  "epoch": 2.0,
+  "global_step": 250,
+  "best_metric": 0.8628230616302187,
+  "best_checkpoint": "/workspace/scratch/38d5f9cfc17c/lab3/artifacts/distilbert_imdb_quick/checkpoints/checkpoint-250"
+}
