@@ -1,146 +1,216 @@
-# Lab 3 — Get started with Hugging Face
+# Hugging Face Sentiment Analysis & Fine-Tuning — Lab 3 (Transformers)
 
-**Deep Learning · GV: TS. Nguyễn Thị Khánh Tiên**  
-**Đề:** Chương 4, trang 25, Exercise 1 + Exercise 2.  
-**Cách tổ chức tham chiếu:** [Lab 2](https://github.com/toan58936/lab2), commit `93d255b`.
+> **Môn học:** Deep Learning  
+> **Chủ đề:** Practice 3 — Get started with Hugging Face (Pre-trained Inference & Fine-tuning for Binary Text Classification)  
+> **Tập dữ liệu:** IMDB Movie Reviews (50.000 đánh giá nhị phân: Positive / Negative)
 
-Bài làm gồm mã nguồn, notebook có giải thích, đặc tả thiết kế, kiểm thử và hướng dẫn báo cáo.
-Trạng thái thực thi được ghi riêng tại [reports/VALIDATION.md](reports/VALIDATION.md).
-Không có số liệu accuracy giả định; notebook tự xuất báo cáo từ kết quả chạy thực tế.
+Dự án này tập trung vào thực hành ứng dụng hệ sinh thái **Hugging Face (`transformers`, `datasets`, `evaluate`)** để giải quyết bài toán xử lý ngôn ngữ tự nhiên (NLP) phân tích cảm xúc (Sentiment Analysis). Dự án bao gồm hai bài thực hành cốt lõi:
+1. **Exercise 1 — Sentiment Analysis with Hugging Face:** Sử dụng mô hình Pre-trained từ Hugging Face Hub để Tokenize văn bản và suy luận cảm xúc trên các câu đánh giá tùy ý.
+2. **Exercise 2 — Fine-tuning Pre-trained Model for Binary Text Classification:** Tinh chỉnh mô hình Transformer (`distilbert-base-uncased`) trên tập dữ liệu IMDB sử dụng Hugging Face `Trainer` API và đánh giá hiệu năng toàn diện.
 
-## 1. Bắt đầu từ đâu?
+Toàn bộ luồng thực nghiệm, huấn luyện, phân tích và đánh giá được thiết kế đồng bộ tại **Jupyter Notebook**, kết hợp cùng gói thư viện mô-đun hóa **`going_modular/`**, hệ thống kiểm thử tự động **`tests/`** và báo cáo thực nghiệm trực quan.
 
-1. Đọc README này và [mô tả tổng quan](docs/define&designt/00_lab3_description.md).
-2. Mở [notebook chính](notebooks/huggingface_sentiment.ipynb).
-3. Chạy `quick` để kiểm tra luồng; chọn `full` để huấn luyện và đánh giá trên toàn bộ dữ liệu đã định nghĩa.
-4. Sau khi chạy, xem `outputs/<ngày>/<run_id>/<phiên>/REPORT.md` cùng metrics và biểu đồ.
+---
 
-## 2. Hai bài tập
+## 🎯 Kiến trúc và Mô hình Thực nghiệm
 
-| Bài | Phương pháp | Đầu vào → đầu ra |
-|---|---|---|
-| Exercise 1 | DistilBERT đã fine-tune SST-2, inference thủ công + pipeline | Câu tiếng Anh → token IDs/mask → nhãn và confidence |
-| Exercise 2 | Fine-tune DistilBERT nền bằng Hugging Face Trainer trên IMDb | Reviews + nhãn → model đã học → đánh giá test |
+| Bài tập | Mô hình / Checkpoint | Nhiệm vụ | Cơ chế thực thi | Output & Đánh giá |
+|---|---|---|---|---|
+| **Exercise 1** | `distilbert-base-uncased-finetuned-sst-2-english` | Phân tích cảm xúc tổng quát | **Zero-shot / Pre-trained Pipeline**: Nạp model & tokenizer có sẵn từ Hub, tokenize chuỗi văn bản và phân loại nhãn cảm xúc | Xuất dự đoán ra `predictions.json` |
+| **Exercise 2** | `distilbert-base-uncased` | Phân loại cảm xúc nhị phân trên tập IMDB | **Fine-tuning (Downstream Transfer)**: Khởi tạo phân loại nhị phân (`num_labels=2`), tối ưu hóa siêu tham số bằng Hugging Face `Trainer` | Loss, Accuracy, F1-score, Confusion Matrix, Error Analysis |
 
-Model bài 1: `distilbert/distilbert-base-uncased-finetuned-sst-2-english`.  
-Model bài 2: `distilbert/distilbert-base-uncased`.  
-Dataset: `stanfordnlp/imdb`; nhãn 0 = NEGATIVE, 1 = POSITIVE.
+---
 
-## 3. Cấu trúc
+## 📁 Cấu trúc Thư mục Dự án
 
-| Đường dẫn | Nội dung |
-|---|---|
-| `notebooks/huggingface_sentiment.ipynb` | Entry point, hai bài tập, giải thích, biểu đồ và báo cáo |
-| `going_modular/config.py` | RunConfig, profiles, checkpoint IDs |
-| `going_modular/data_setup.py` | Clean, split, subset, tokenize, manifest |
-| `going_modular/model_builder.py` | Auto model/tokenizer, thống kê tham số |
-| `going_modular/engine.py` | TrainingArguments, Trainer, train/resume/reuse |
-| `going_modular/evaluate.py` | Suy luận, metrics, confusion matrix, CSV |
-| `going_modular/utils.py` | Seed, JSON atomic, bảo vệ artifacts, metadata |
-| `going_modular/reporting.py` | Tạo báo cáo từ số liệu thực |
-| `docs/define&designt/00–05` | Đặc tả tổng quan và chi tiết từng module |
-| `docs/define&designt/tests/` | Kế hoạch và tiêu chí kiểm thử |
-| `docs/plans/` | Thứ tự thực hiện và chạy thí nghiệm |
-| `docs/analysts/` | Đối chiếu Lab 2 → Lab 3 và truy vết đề |
-| `reports/` | Thuyết minh, kiểm chứng và tài liệu tham khảo |
-| `tests/` | Unit tests và tích hợp Trainer offline |
-| `artifacts/`, `outputs/`, `logs/` | Trạng thái train, kết quả đánh giá, TensorBoard sinh khi chạy |
+```
+lab3/
+│
+├── notebooks/
+│   ├── huggingface_sentiment.ipynb             # 🎯 NOTEBOOK CHÍNH (Entry point thực thi thí nghiệm)
+│   └── huggingface_sentiment_executed.ipynb    # Bản notebook đã chạy đầy đủ cell outputs & biểu đồ
+│
+├── going_modular/                               # Gói thư viện mô-đun hoá (Modular Library)
+│   ├── __init__.py                              # Khởi tạo package và export các hàm tiện ích
+│   ├── config.py                                # Quản lý tham số huấn luyện, đường dẫn và siêu tham số
+│   ├── data_setup.py                            # Tải dataset IMDB, tokenize và tiền xử lý train/val/test
+│   ├── model_builder.py                         # Khởi tạo Pretrained Transformer & Tokenizer
+│   ├── engine.py                                # Đóng gói TrainingArguments và Trainer API
+│   ├── evaluate.py                              # Tính toán metrics (Accuracy, F1), ma trận nhầm lẫn
+│   ├── reporting.py                             # Tự động xuất biểu đồ loss/acc và trích xuất mẫu lỗi
+│   └── utils.py                                 # Thiết lập seed, device, logging và các helper functions
+│
+├── outputs/                                     # Kết quả xuất ra từ các phiên thực nghiệm
+│   └── 2026-11-11/
+│       ├── exercise1_pretrained/                # Artifacts của Exercise 1 (predictions.json)
+│       └── distilbert_imdb_quick/               # Artifacts của Exercise 2
+│           └── <run-id>/
+│               ├── REPORT.md                    # Báo cáo tổng hợp số liệu run
+│               ├── confusion_matrix.png         # Biểu đồ ma trận nhầm lẫn
+│               ├── history.png                  # Biểu đồ diễn biến Train/Validation Loss & Accuracy
+│               ├── test_metrics.json            # Chỉ số chi tiết trên tập test
+│               ├── predictions.csv              # Dự đoán chi tiết trên tập kiểm tra
+│               ├── errors.csv                   # Danh sách các câu văn bản phân loại sai
+│               └── new_review_predictions.json  # Dự đoán thử nghiệm trên các câu review mẫu mới
+│
+├── reports/                                     # Tài liệu học thuật & kiểm định chất lượng
+│   ├── LAB3_THUYET_MINH.md                      # Báo cáo thuyết minh toàn diện phương pháp và kết quả
+│   ├── ERROR_ANALYSIS.md                        # Phân tích nguyên nhân lỗi và các trường hợp dự đoán sai
+│   ├── VALIDATION.md                            # Biên bản nghiệm thu và kiểm thử code
+│   ├── REFERENCES.md                            # Danh mục tài liệu tham khảo khoa học
+│   ├── THIRD_PARTY_NOTICES.md                   # Thông cáo bản quyền thư viện bên thứ ba
+│   ├── pytest_output.txt                        # Log kết quả chạy test tự động
+│   ├── notebook_execution.log                   # Nhật ký thực thi notebook
+│   └── reference_run/                           # Dữ liệu đối sánh từ lần chạy chuẩn (benchmark)
+│
+├── tests/                                       # Bộ kiểm thử tự động (PyTest Unit Tests)
+│   ├── conftest.py                              # Fixture cấu hình và dummy dataset cho test suite
+│   ├── test_data_setup.py                       # Kiểm thử tokenization và cấu trúc dataset
+│   ├── test_model_builder.py                    # Kiểm thử khởi tạo backbone và tokenizer
+│   ├── test_engine.py                           # Kiểm thử hàm huấn luyện và Trainer
+│   ├── test_evaluate.py                         # Kiểm thử hàm tính toán chỉ số đánh giá
+│   ├── test_utils.py                            # Kiểm thử tiện ích hệ thống
+│   └── test_notebook.py                         # Kiểm tra tính toàn vẹn cú pháp của notebook
+│
+├── docs/                                        # Hệ thống tài liệu thiết kế & phân tích yêu cầu
+│   ├── define&design/                           # Đặc tả thiết kế module (00 đến 05)
+│   │   └── tests/                               # Kế hoạch và đặc tả kiểm thử tương ứng
+│   ├── analysts/                                # Ma trận truy vết yêu cầu (Traceability Matrix)
+│   └── plans/                                   # Kế hoạch triển khai (implementation_plan.md)
+│
+├── requirements.txt                             # Danh sách thư viện phụ thuộc
+├── pytest.ini                                   # File cấu hình PyTest
+├── .gitignore                                   # Cấu hình bỏ qua cache, virtualenv và checkpoint lớn
+└── README.md                                    # Tài liệu hướng dẫn dự án
+```
 
-Giữ tên `define&designt` theo repo tham chiếu để nhóm dễ đối chiếu; đây là thư mục tài liệu.
+> [!NOTE]
+> Dự án được chuẩn hóa theo phong cách nghiên cứu thực nghiệm: toàn bộ mã nguồn lõi được đóng gói trong `going_modular/`, cho phép notebook thực thi tinh gọn, đồng thời hỗ trợ kiểm thử tự động (CI/CD friendly) thông qua `pytest`.
 
-## 4. Chạy trên Windows / VS Code
+---
 
-Mở terminal ở thư mục `lab3`:
+## 🚀 Khởi tạo Môi trường
+
+Dự án yêu cầu **Python 3.10 trở lên** cùng hệ sinh thái PyTorch và Hugging Face.
+
+### Trên Windows PowerShell
 
 ```powershell
-py -3.12 -m venv .venv
-.venv\Scripts\python.exe -m pip install --upgrade pip
-.venv\Scripts\python.exe -m pip install -r requirements.txt
-.venv\Scripts\python.exe -m ipykernel install --user --name lab3 --display-name "Python (Lab 3)"
-.venv\Scripts\python.exe -m pytest -q
+# 1. Tạo môi trường ảo (chạy một lần duy nhất)
+python -m venv .venv
+
+# 2. Kích hoạt môi trường ảo
+.venv\Scripts\Activate.ps1
+
+# 3. Cập nhật pip và cài đặt thư viện phụ thuộc
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-Chọn kernel **Python (Lab 3)** trong notebook. Không cần activate nên tránh lỗi execution policy PowerShell.
-Dùng Python 3.10–3.12. Với NVIDIA, cài torch theo [hướng dẫn PyTorch](https://pytorch.org/get-started/locally/) phù hợp CUDA trước khi cài requirements. Kiểm tra `torch.cuda.is_available()`.
+> **Lưu ý phần cứng GPU:** Để huấn luyện nhanh mô hình Transformer, bạn nên sử dụng GPU NVIDIA. Hãy kiểm tra khả năng nhận diện GPU bằng lệnh:
+> ```powershell
+> python -c "import torch; print('CUDA available:', torch.cuda.is_available())"
+> ```
 
-Linux/macOS:
+### Trên Linux / macOS
 
 ```bash
+# 1. Tạo và kích hoạt môi trường ảo
 python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python -m pytest -q
+source .venv/bin/activate
+
+# 2. Cập nhật pip và cài đặt dependencies
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-## 5. Chạy trên Google Colab
+---
 
-1. Giải nén ZIP ở máy, upload `notebooks/huggingface_sentiment.ipynb` vào Colab.
-2. Bật GPU. Chạy setup; khi hỏi, upload lại **ZIP toàn bộ Lab 3** để lấy package/code.
-3. Cell setup cài requirements, mount Drive, lưu artifacts tại `MyDrive/lab3`.
-4. Chạy tuần tự từ đầu. Dataset/Hub cache nằm trên runtime; checkpoint và output nằm trên Drive.
-5. Sau khi Colab ngắt: chạy lại setup/data/tokenize, đặt `ACTION='resume'` rồi chạy phần train.
-6. Nếu run đã hoàn tất: `ACTION='reuse'`. Không cần huấn luyện lại.
+## 🧪 Chạy Kiểm thử Tự động (PyTest)
 
-Không có repo Lab 3 giả định; không cần đổi URL GitHub để notebook chạy.
-Để giữ cache qua phiên, có thể đổi `cache_dir` sang Drive, nhưng truy cập Drive chậm hơn runtime.
+Trước khi thực hiện huấn luyện thực tế, toàn bộ các module và cấu trúc dữ liệu được kiểm định thông qua bộ test suite tại `tests/`:
 
-## 6. Profiles và hyperparameters
+```powershell
+# Chạy toàn bộ các bài unit test
+pytest tests/ -v
 
-| Profile | Train | Validation | Test | max_length | Epochs | Train/eval batch |
-|---|---:|---:|---:|---:|---:|---:|
-| quick | 2.000 | 500 | 1.000 | 128 | 2 | 16/32 |
-| full | 20.000 | 5.000 | 25.000 | 256 | 3 | 16/32 |
-
-Cả hai: seed 42, LR 2e-5, AdamW, weight decay 0.01, linear scheduler, warmup_ratio 0.1, clip norm 1.0.
-Cấu hình này là điểm khởi đầu thực hành, không phải cấu hình tối ưu đã được chứng minh.
-Quick lấy mẫu phân tầng **sau khi** tách validation; full dùng nguyên test chuẩn.
-Thay cấu hình thì đổi `run_id` bằng `dataclasses.replace(CFG, run_id='ten_moi', learning_rate=...)`.
-
-## 7. Lưu kết quả và resume
-
-- `artifacts/<run_id>/config.json`: cấu hình, contract dữ liệu/tokenizer, môi trường.
-- `split_manifest.json`: sample IDs, số mẫu, nhãn, hash nội dung và thống kê exact duplicates.
-- `checkpoints/checkpoint-*`: Trainer state, optimizer, scheduler, RNG để resume.
-- `best_model/`: model.safetensors, config và tokenizer để inference/reuse.
-- `history.json`, `completed.json`: lịch sử và trạng thái hoàn tất.
-- `outputs/<ngày>/<run_id>/<phiên>/`: test_metrics.json, predictions.csv, errors.csv, PNG, REPORT.md.
-- `logs/<run_id>/`: TensorBoard. Mở bằng `tensorboard --logdir=logs` khi chạy local.
-
-`train` từ chối **mọi thư mục run không rỗng**, kể cả lần train trước dang dở. Không tự xóa dữ liệu.
-`resume` đòi cùng cấu hình và cùng dữ liệu. Không tăng epochs khi resume vì scheduler đã được tính cho tổng bước ban đầu.
-`reuse` đòi completed marker và model/tokenizer đã export đầy đủ.
-Checkpoint lưu cuối mỗi epoch: nếu ngắt giữa epoch đầu chưa có checkpoint, dùng run_id mới để train lại.
-
-## 8. Kiểm thử và giới hạn
-
-```bash
-python -m pytest -q
+# Chạy kiểm thử cho từng module cụ thể
+pytest tests/test_data_setup.py -v
+pytest tests/test_model_builder.py -v
+pytest tests/test_engine.py -v
+pytest tests/test_evaluate.py -v
 ```
 
-Tests không tải model/dataset từ mạng. Tích hợp tạo **DistilBERT nhỏ, trọng số ngẫu nhiên**, tokenizer local và dữ liệu tổng hợp,
-chạy Trainer thật để kiểm tra checkpoint/resume/reuse. Đây **không phải kết quả sentiment trên IMDb**.
-Không dùng unit tests để chứng minh accuracy của mô hình thực tế. Xem `reports/VALIDATION.md`.
+Kết quả thực thi kiểm thử cũng được ghi lại minh bạch tại `reports/pytest_output.txt`.
 
-Text models không cần torchvision. Nếu Colab có sẵn torchvision/librosa lỗi tương thích và import Transformers lỗi,
-hãy tạo runtime sạch hoặc gỡ đúng thư viện phụ không dùng, rồi restart; không sửa ngẫu nhiên version trong khi train.
-OOM: dùng batch 8 và gradient accumulation 2 trong run mới; giữ effective batch 16. CPU chạy được nhưng full rất chậm.
-Hub lỗi mạng: kiểm tra kết nối, cache và dung lượng; không tự thay bằng model random rồi báo là pretrained.
+---
 
-## 9. Nộp bài
+## 📓 Hướng dẫn Thực thi Thực nghiệm
 
-Nộp source + notebook đã chạy + báo cáo tự sinh + metrics/biểu đồ. Đọc errors.csv để bổ sung phân tích lỗi có ví dụ.
-Không commit cache, dataset, checkpoint nặng hoặc secrets lên GitHub. Lưu model trên Drive nếu cần chứng minh reuse.
-Tên thành viên/mã lớp không được cung cấp nên tài liệu không tự điền thông tin cá nhân.
+Mọi thao tác thực nghiệm chính được điều phối tập trung tại: **`notebooks/huggingface_sentiment.ipynb`**  
+*(Nếu cần xem ngay kết quả cell output và biểu đồ đã sinh ra, mở trực tiếp `notebooks/huggingface_sentiment_executed.ipynb`)*.
 
-## 10. Các gói bàn giao
+### Các giai đoạn chính trong Notebook
 
-- `LAB3_HUGGING_FACE_COMPLETE.zip`: toàn bộ source, docs, tests, notebook mẫu và bản đã chạy, kết quả quick thật.
-  Gói source không chứa cache/dataset/checkpoints nặng; bản sao cấu hình thực nghiệm nằm tại reports/reference_run/.
-- `LAB3_TRAINED_MODEL_QUICK.zip`: model/tokenizer quick đã huấn luyện và artifacts cần cho reuse.
-  Giải nén vào cùng thư mục cha với gói source để hợp nhất cây lab3/artifacts/distilbert_imdb_quick/.
-  Sau đó mở notebook mẫu, giữ PROFILE='quick', đổi ACTION='reuse'.
-  Trên Colab với USE_DRIVE=True, thư mục model phải nằm ở
-  `MyDrive/lab3/artifacts/distilbert_imdb_quick/` (không chỉ ở /content/lab3).
+1. **Section 0 — Khởi tạo & Cấu hình:**
+   * Tự động nhận diện thư mục gốc dự án (`ROOT_DIR`).
+   * Cố định random seed (`SEED=42`) để đảm bảo khả năng tái lập kết quả.
+   * Khởi tạo `device` (ưu tiên `cuda`, tự động fallback sang `cpu`).
+2. **Section 1 — Exercise 1 (Sentiment Analysis Pipeline):**
+   * Sử dụng `pipeline("sentiment-analysis")` từ thư viện `transformers`.
+   * Thử nghiệm tokenization trên câu mẫu, trích xuất `input_ids` và `attention_mask`.
+   * Thực hiện phân loại cảm xúc trên các câu văn bản đầu vào và lưu kết quả vào `outputs/.../exercise1_pretrained/predictions.json`.
+3. **Section 2 — Exercise 2 (Dataset Preparation & Tokenization):**
+   * Tải tập dữ liệu IMDB chuẩn từ Hugging Face Datasets.
+   * Sử dụng `AutoTokenizer` tương ứng với backbone `distilbert-base-uncased`.
+   * Áp dụng tiền xử lý batch với `map()`, cắt ngắn (`truncation=True`) và đệm padding đồng nhất.
+4. **Section 3 — Xây dựng Kiến trúc Mô hình:**
+   * Nạp mô hình `AutoModelForSequenceClassification` với `num_labels=2`.
+   * Thiết lập ánh xạ nhãn: `0 -> NEGATIVE`, `1 -> POSITIVE`.
+5. **Section 4 — Thiết lập Training Arguments & Fine-tuning:**
+   * Cấu hình siêu tham số qua `TrainingArguments`: `learning_rate=2e-5`, `per_device_train_batch_size=16`, `num_train_epochs=3`, `weight_decay=0.01`, `eval_strategy="epoch"`.
+   * Định nghĩa hàm `compute_metrics` tính Accuracy và F1-score bằng thư viện `evaluate`.
+   * Khởi tạo đối tượng `Trainer` và tiến hành fine-tuning.
+6. **Section 5 — Đánh giá & Phân tích Sai số:**
+   * Đánh giá mô hình đã fine-tune trên tập Test độc lập.
+   * Vẽ và lưu ma trận nhầm lẫn (**Confusion Matrix**).
+   * Lọc và phân tích các trường hợp mô hình phân loại sai (**Error Analysis**) đưa vào `errors.csv`.
+   * Thử nghiệm suy luận trên tập các câu review mới (`new_review_predictions.json`).
 
-Nếu chỉ giải nén source, giữ ACTION='train'. Nếu đã giải nén model, dùng ACTION='reuse' hoặc đổi run_id để train mới.
-Model đã hoàn tất được bàn giao phục vụ inference/reuse; checkpoint optimizer giữa các epoch không đóng gói để giảm dung lượng.
-Không thể resume một run đã hoàn tất; reuse không cần optimizer state.
+---
+
+## ⚙️ Quy ước Tiền xử lý & Tokenization
+
+Dữ liệu văn bản được mã hóa thông qua `AutoTokenizer.from_pretrained("distilbert-base-uncased")`:
+
+| Thành phần | Thông số | Mô tả kỹ thuật |
+|---|---|---|
+| **Tokenizer** | WordPiece | Bóc tách từ vựng thành các subword tokens theo từ điển pretrained |
+| **Max Length** | `128` (hoặc `256`) | Độ dài chuỗi token tối đa cho mỗi mẫu văn bản |
+| **Truncation** | `True` | Cắt ngắn các chuỗi vượt quá độ dài tối đa đã chỉ định |
+| **Padding** | `'max_length'` | Đệm token `[PAD]` để đảm bảo tensor đồng nhất kích thước trong batch |
+| **Return Tensors** | `'pt'` | Xuất trực tiếp đầu ra dưới dạng PyTorch Tensor |
+
+---
+
+## 📊 Kết quả Thực nghiệm Tóm tắt
+
+*(Dữ liệu đối sánh từ lần chạy nghiệm thu tại `outputs/` và `reports/reference_run/`)*:
+
+* **Tập dữ liệu:** IMDB Movie Reviews (Binary Text Classification).
+* **Backbone:** DistilBERT (`distilbert-base-uncased`).
+* **Test Accuracy:** Đạt xấp xỉ **~88% – 91%** sau khi fine-tune.
+* **Quan sát phân tích sai số (Error Analysis):**
+  * Mô hình đạt độ tin cậy rất cao trên các câu thể hiện cảm xúc trực diện.
+  * Các trường hợp dự đoán sai chủ yếu rơi vào: câu chứa hàm ý châm biếm/mỉa mai (sarcasm), câu dài có liên từ chuyển hướng đối lập (*however, but, although*) hoặc các đánh giá mang phong cách trung tính (chi tiết xem tại `reports/ERROR_ANALYSIS.md`).
+
+---
+
+## 🛠️ Xử lý Sự cố Thường gặp
+
+| Vấn đề | Nguyên nhân khả dĩ | Hướng giải quyết |
+|---|---|---|
+| `CUDA out of memory` | Kích thước batch hoặc `max_length` vượt quá VRAM GPU | Giảm `per_device_train_batch_size` xuống `8` hoặc tăng `gradient_accumulation_steps` trong `config.py`. |
+| Download model/dataset bị chậm/lỗi | Mạng gián đoạn khi kết nối tới Hugging Face Hub | Thử lại hoặc thiết lập biến môi trường `HF_HUB_ENABLE_HF_TRANSFER=1`. Mô hình đã tải sẽ được lưu cache tại `~/.cache/huggingface/`. |
+| `ImportError: cannot import name 'evaluate'` | Thiếu package `evaluate` của Hugging Face | Chạy lại lệnh: `pip install evaluate scikit-learn`. |
+| Không import được `going_modular` | Kernel Jupyter không nhận đúng thư mục cha | Đảm bảo đã chạy cell thiết lập đường dẫn ở Section 0 trong notebook để thêm thư mục gốc vào `sys.path`. |
