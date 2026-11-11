@@ -3,7 +3,7 @@
 ## 1. Mục đích
 
 Đáp ứng trực tiếp Exercise 2 bước 5–6: tạo TrainingArguments và Trainer.
-Kế thừa cách phân module của Lab 2 nhưng giao loop, optimizer, scheduler, checkpoint cho Trainer.
+Đóng gói các thiết lập và giao toàn bộ loop, optimizer, scheduler, checkpoint cho Trainer quản lý
 Không có vòng lặp train_step riêng cạnh tranh với Trainer; tránh hai nguồn trạng thái.
 
 ## 2. Hợp đồng
