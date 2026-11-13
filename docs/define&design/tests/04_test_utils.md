@@ -54,3 +54,24 @@ File có **6 pytest cases** (1+1+4), nhưng các hàm util khác như `new_outpu
 - UTIL-P05: `environment_info` trả metadata gắn với runtime, không bịa package chưa cài.
 
 Các hạng mục đề xuất không được tính vào log 24 passed gốc.
+
+## 6. Test steps – expected – failure modes của utils (v3.0)
+
+| Case | Input/Action | Expected | Ghi chú |
+|---|---|---|---|
+| UTIL-01 | save `{'ok':1}` rồi thử ghi NaN `{'bad':nan}` lên cùng file | lần hai raise ValueError; file cũ vẫn `{'ok':1}`; không tồn tại `value.json.tmp` | test atomic serialization, không phải transaction cả filesystem |
+| UTIL-02 | run dir có config contract `{'seed':42}`; thử train; resume seed 43; resume seed 42 | train → FileExistsError; mismatch → ValueError; match → không raise | test guard/contract, chưa test tất cả lifecycle |
+| UTIL-03 | `RunConfig(run_id='../x')` | ValueError | path traversal guard |
+| UTIL-04 | `RunConfig(epochs=0)` | ValueError | epochs dương |
+| UTIL-05 | `RunConfig(max_length=513)` | ValueError | giới hạn DistilBERT 512 |
+| UTIL-06 | `RunConfig(warmup_ratio=1)` | ValueError | ratio `<1` |
+
+**Bằng chứng:** `tests/test_utils.py`; tổng 6 parametrized pytest cases như ma trận. **Tiền điều kiện:** filesystem `tmp_path` ghi được; Python dependencies import được. **Nếu fail:** giữ traceback, file temp/target nếu an toàn, snapshot config; không xóa run thực để sửa test.
+
+### Những gì chưa test
+
+- `read_json` malformed, `new_output_dir` timezone/collision, `environment_info` thiếu package.
+- Contract hash thay đổi do content nhưng ID vẫn giữ, đồng bộ concurrent actions, quyền ghi hệ thống.
+- Trường hợp `reuse` thiếu model.safetensors (code có guard nhưng chưa có unit case độc lập cho từng required file).
+
+Đề xuất UTIL-P01..P05 ở [utils spec](../04_utils.md), **chưa thực hiện**. Liên quan FR11/NFR02/NFR03.

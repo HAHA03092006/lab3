@@ -60,3 +60,40 @@ Exercise 1 dùng `distilbert/distilbert-base-uncased-finetuned-sst-2-english` đ
 | — | — | Chưa cập nhật | — | TODO |
 
 **Báo cáo khi chuyển phase:** Nêu 1) việc đã có bằng chứng, 2) việc còn thiếu, 3) lỗi/rào cản, 4) commit/PR và 5) người xác nhận. Không sửa kết quả trong `reports/` nếu không chạy lại thật.
+
+## 8. Work package, tiến trình giải thích và cách bàn giao (bổ sung v3.0)
+
+**Mục tiêu có thể báo cáo:** Kiểm checkpoint đúng vai trò, model head và preprocessing input.
+
+### 8.1. Trình tự thực hiện ở mức tác vụ
+
+1. Exercise 1: nạp SST-2, tokenize câu mẫu, quan sát logits/softmax và pipeline.
+2. Exercise 2: load DistilBERT base/tokenizer cùng ID/revision.
+3. Kiểm id2label 0/1, logits [B,2], loss scalar; đo trainable/frozen params.
+4. Dùng collator dynamic padding, ghi khác biệt pretrained-vs-random tiny fixture.
+
+### 8.2. Bằng chứng lấy từ code/ZIP, không phải báo cáo tiến độ của từng cá nhân
+
+Notebook executed §1/§3, `model_builder.py`, `MODEL-01`, E1 predictions JSON, reference model summary.
+
+**Điều kiện review/Definition of Done cụ thể:** Có thể giải thích E1 không train; E2 có head mới và all-trainable; tokenizer/model match.
+
+**Rủi ro còn lại:** Nhầm base với SST-2, wrong labels, padding mask sai, lỗi mạng khi nạp checkpoint.
+
+### 8.3. Checklist nghiệm thu cần xác nhận bằng chứng
+
+- [ ] Exercise 1: nạp SST-2, tokenize câu mẫu, quan sát logits/softmax và pipeline.
+- [ ] Exercise 2: load DistilBERT base/tokenizer cùng ID/revision.
+- [ ] Kiểm id2label 0/1, logits [B,2], loss scalar; đo trainable/frozen params.
+- [ ] Dùng collator dynamic padding, ghi khác biệt pretrained-vs-random tiny fixture.
+- [ ] Người kiểm tra mở đúng file code/test/output trong cột bằng chứng.
+- [ ] Nếu không chạy lại được, đánh dấu "Chưa tái kiểm chứng" thay vì tự tick.
+- [ ] Nếu chức năng đổi, cập nhật ma trận FR và link spec module liên quan.
+
+### 8.4. Nhật ký công việc dùng cho nhóm điền
+
+| Ngày giờ thực tế | Thành viên | Branch/commit/PR | Công việc có bằng chứng | Test hoặc demo đã làm | Phản hồi reviewer | Trạng thái |
+|---|---|---|---|---|---|---|
+| _Chưa điền_ | _—_ | _—_ | _—_ | _—_ | _—_ | _Not recorded_ |
+
+**Cách báo cáo phase này:** trình bày mục tiêu → một quyết định kỹ thuật và lý do → file/hàm thực tế → test/metric/manifest → hạn chế hoặc việc chưa làm. Xem [quy trình nhóm](team_workflow_and_log.md) và [ma trận yêu cầu](../analysts/requirements_traceability.md).

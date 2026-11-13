@@ -59,3 +59,40 @@ Tạo nền tảng rõ ràng để các phase còn lại có cấu hình, depend
 | — | — | Chưa cập nhật | — | TODO |
 
 **Báo cáo khi chuyển phase:** Nêu 1) việc đã có bằng chứng, 2) việc còn thiếu, 3) lỗi/rào cản, 4) commit/PR và 5) người xác nhận. Không sửa kết quả trong `reports/` nếu không chạy lại thật.
+
+## 8. Work package, tiến trình giải thích và cách bàn giao (bổ sung v3.0)
+
+**Mục tiêu có thể báo cáo:** Khóa phạm vi bài, môi trường và hệ thống mã yêu cầu.
+
+### 8.1. Trình tự thực hiện ở mức tác vụ
+
+1. Đối chiếu E1.1–E2.7 với slide gốc (nếu có) và ghi câu hỏi mơ hồ.
+2. Tạo venv phù hợp, xác nhận Python/torch/transformers/datasets/accelerate API.
+3. Chốt `RunConfig.for_profile` và nhãn 0/1, đặt quy ước branch và run_id.
+4. Gắn FR01–FR15/NFR01–NFR08 vào spec; tạo docs index và ma trận.
+
+### 8.2. Bằng chứng lấy từ code/ZIP, không phải báo cáo tiến độ của từng cá nhân
+
+`requirements.txt`, `going_modular/config.py`, notebook §0, docs/README.md, ma trận FR.
+
+**Điều kiện review/Definition of Done cụ thể:** Một người mới đọc README hiểu đâu là pretrained E1, đâu là fine-tuning E2; không trùng FR; môi trường có chỉ dẫn cài và test.
+
+**Rủi ro còn lại:** Version API thay đổi; chưa có slide gốc; không có thông tin người được phân công.
+
+### 8.3. Checklist nghiệm thu cần xác nhận bằng chứng
+
+- [ ] Đối chiếu E1.1–E2.7 với slide gốc (nếu có) và ghi câu hỏi mơ hồ.
+- [ ] Tạo venv phù hợp, xác nhận Python/torch/transformers/datasets/accelerate API.
+- [ ] Chốt `RunConfig.for_profile` và nhãn 0/1, đặt quy ước branch và run_id.
+- [ ] Gắn FR01–FR15/NFR01–NFR08 vào spec; tạo docs index và ma trận.
+- [ ] Người kiểm tra mở đúng file code/test/output trong cột bằng chứng.
+- [ ] Nếu không chạy lại được, đánh dấu "Chưa tái kiểm chứng" thay vì tự tick.
+- [ ] Nếu chức năng đổi, cập nhật ma trận FR và link spec module liên quan.
+
+### 8.4. Nhật ký công việc dùng cho nhóm điền
+
+| Ngày giờ thực tế | Thành viên | Branch/commit/PR | Công việc có bằng chứng | Test hoặc demo đã làm | Phản hồi reviewer | Trạng thái |
+|---|---|---|---|---|---|---|
+| _Chưa điền_ | _—_ | _—_ | _—_ | _—_ | _—_ | _Not recorded_ |
+
+**Cách báo cáo phase này:** trình bày mục tiêu → một quyết định kỹ thuật và lý do → file/hàm thực tế → test/metric/manifest → hạn chế hoặc việc chưa làm. Xem [quy trình nhóm](team_workflow_and_log.md) và [ma trận yêu cầu](../analysts/requirements_traceability.md).

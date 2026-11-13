@@ -61,3 +61,40 @@ Notebook trình bày Exercise 1 và Exercise 2 theo trình tự cụ thể; mã 
 | — | — | Chưa cập nhật | — | TODO |
 
 **Báo cáo khi chuyển phase:** Nêu 1) việc đã có bằng chứng, 2) việc còn thiếu, 3) lỗi/rào cản, 4) commit/PR và 5) người xác nhận. Không sửa kết quả trong `reports/` nếu không chạy lại thật.
+
+## 8. Work package, tiến trình giải thích và cách bàn giao (bổ sung v3.0)
+
+**Mục tiêu có thể báo cáo:** Hoàn thiện tài liệu giải trình, notebook và sử dụng bằng chứng.
+
+### 8.1. Trình tự thực hiện ở mức tác vụ
+
+1. Notebook điều phối E1 và E2, phần markdown giải thích output và inference/reload.
+2. README chỉ rõ Python env, quick/full và cách tái lập, liên kết docs index.
+3. Đồng bộ spec module/FR/test/phase, số liệu quick từ JSON.
+4. Lập kịch bản trình bày E1/2, theory, decision, bugfix và giới hạn.
+
+### 8.2. Bằng chứng lấy từ code/ZIP, không phải báo cáo tiến độ của từng cá nhân
+
+Notebook 20 cells, executed notebook, reports/LAB3_THUYET_MINH.md, docs index, test NOTEBOOK-01.
+
+**Điều kiện review/Definition of Done cụ thể:** Không còn FR trùng nghĩa; tất cả link docs chính mở được; report không chứa số được ước đoán; tên file chuẩn.
+
+**Rủi ro còn lại:** Khác biệt docs và code, link GitHub mã hóa &, số liệu lệch version/quick-vs-full.
+
+### 8.3. Checklist nghiệm thu cần xác nhận bằng chứng
+
+- [ ] Notebook điều phối E1 và E2, phần markdown giải thích output và inference/reload.
+- [ ] README chỉ rõ Python env, quick/full và cách tái lập, liên kết docs index.
+- [ ] Đồng bộ spec module/FR/test/phase, số liệu quick từ JSON.
+- [ ] Lập kịch bản trình bày E1/2, theory, decision, bugfix và giới hạn.
+- [ ] Người kiểm tra mở đúng file code/test/output trong cột bằng chứng.
+- [ ] Nếu không chạy lại được, đánh dấu "Chưa tái kiểm chứng" thay vì tự tick.
+- [ ] Nếu chức năng đổi, cập nhật ma trận FR và link spec module liên quan.
+
+### 8.4. Nhật ký công việc dùng cho nhóm điền
+
+| Ngày giờ thực tế | Thành viên | Branch/commit/PR | Công việc có bằng chứng | Test hoặc demo đã làm | Phản hồi reviewer | Trạng thái |
+|---|---|---|---|---|---|---|
+| _Chưa điền_ | _—_ | _—_ | _—_ | _—_ | _—_ | _Not recorded_ |
+
+**Cách báo cáo phase này:** trình bày mục tiêu → một quyết định kỹ thuật và lý do → file/hàm thực tế → test/metric/manifest → hạn chế hoặc việc chưa làm. Xem [quy trình nhóm](team_workflow_and_log.md) và [ma trận yêu cầu](../analysts/requirements_traceability.md).

@@ -47,3 +47,32 @@ Nếu `nbformat` báo schema error, xem metadata/cell type/id. Nếu `ast.parse`
 ## 6. Tiêu chí nghiệm thu
 
 PASS cho NOTEBOOK-01 khi không xuất hiện exception. Đối với nghiệm thu toàn Lab 3, phải bổ sung bằng chứng notebook đã chạy thực tế trong `reports/VALIDATION.md` và các artifacts `outputs/` nếu muốn khẳng định workflow pretrained hoạt động.
+
+## 7. Notebook quality gates và mẫu kiểm chứng (v3.0)
+
+| Stage | Kiểm tra hiện có | Chứng minh gì | KHÔNG chứng minh gì |
+|---|---|---|---|
+| Static source | `nbformat.read(...as_version=4)` | file `.ipynb` đọc được | cells chạy thành công |
+| Notebook validation | `nbformat.validate(nb)` | đúng schema notebook | dependency đúng |
+| Python syntax | `ast.parse(c.source)` với code cells | code cells không lỗi syntax | runtime import/mạng/weights |
+| Runtime E1/E2 | executed notebook + notebook_execution.log | notebook từng có output lịch sử | máy mới có GPU hoặc cache giống |
+| Real eval | outputs quick + reference_run | kết quả test quick 1.000 mẫu | full hoặc đa seed |
+
+**Notebook hiện có** 20 cells, trong đó 11 code cells và 9 markdown cells. NOTEBOOK-01 là **1** pytest test. Nếu cô hỏi “11 code cells = 11 passed không?”, trả lời là **không**; một function lặp qua các code cells để parse.
+
+### Quy trình demo không làm hỏng artifact
+
+1. Tạo venv/kernel mới, xác định project root đúng, cài requirements trước khi mở notebook.
+2. Chọn profile `quick` và **run_id mới** nếu định train lại. Không train đè vào `distilbert_imdb_quick` nếu có artifact lịch sử.
+3. Trước khi chạy, kiểm tra Internet/disk, tránh tự động chạy full chỉ vì thay docs.
+4. Nếu chỉ thuyết trình, mở bản `huggingface_sentiment_executed.ipynb` như log lịch sử; nêu rõ đây không phải lần demo mới.
+5. Đối chiếu config/manifest/metrics nếu có chạy lại. Giữ lỗi thực tế thay vì xóa output cells để giả trạng thái pass.
+
+### Test đề xuất chưa triển khai
+
+- NOTEBOOK-P01: execute notebook quick từ kernel sạch trong môi trường cô chấm, timeout hợp lý.
+- NOTEBOOK-P02: so số liệu hiển thị notebook với JSON quick của cùng run.
+- NOTEBOOK-P03: phát hiện hardcoded credentials/absolute paths, root discovery không đúng.
+- NOTEBOOK-P04: chạy Colab Drive mount/permissions (nếu nhóm cần demo).
+
+Liên quan FR01..04, FR07..12; [test plan](00_test_plan.md) và [guide báo cáo](../../presentation/defense_guide.md).

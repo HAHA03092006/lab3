@@ -58,3 +58,29 @@ Yêu cầu có `torch`, `transformers`, `datasets`, `accelerate` và hỗ trợ 
 - ENGINE-P05: thử `gradient_accumulation_steps > 1` và kiểm global_step đúng.
 
 Không gọi các scenario đề xuất là đã được pytest chạy.
+
+## 7. Timeline chính xác của ENGINE-01 và bằng chứng (v3.0)
+
+| Stage | Setup/action | Expected kỹ thuật | Trạng thái code |
+|---|---|---|---|
+| I | Fixture train 16/val 8, 2 epochs, batch=4, callback dừng sau save epoch 1 | Trainer chạy huấn luyện thật trên tiny model local | Có |
+| II | `run_experiment(action='train',callbacks=[StopAfterFirstCheckpoint()])` | Raise `InterruptedError`, **không** có `completed.json` | Có |
+| III | kiểm `checkpoints/checkpoint-4/optimizer.pt` | Có optimizer state sau 4 steps đầu | Có |
+| IV | `run_experiment(action='resume')` | `global_step==8`, `epoch==2`, có completed marker | Có |
+| V | `predict_texts` trước/sau `reuse` | `p_positive` xấp xỉ nhau, `atol=1e-7` | Có |
+| VI | so sánh history | lịch sử load từ disk bằng history trả về | Có |
+| VII | đếm evaluation rows | `len([x for x in history if 'eval_f1' in x])==2` | Có |
+| VIII | train trùng ID, resume sau completed | FileExistsError và ValueError tương ứng | Có |
+
+**Tổng:** **1** test function, 1 pytest case; nhiều stages/assertions. Nếu cô hỏi “test huấn luyện thực hay mock?”, trả lời: Trainer thực sự tối ưu tiny random DistilBERT trên synthetic text, không mock train, nhưng không phải pretrained IMDb run.
+
+### Rủi ro và test đề xuất
+
+- ENGINE-P01 (chưa có): checkpoint thiếu optimizer/scheduler hoặc corruption → resume từ chối sớm.
+- ENGINE-P02 (chưa có): run ID khác contract/dataset SHA bị từ chối khi reuse.
+- ENGINE-P03 (chưa có): đánh giá val không dùng test tokenized (instrument trace).
+- ENGINE-P04 (chưa có): callback dừng ngay giữa epoch trước checkpoint và recover policy.
+- ENGINE-P05 (chưa có): config evaluation save cadence không tương thích → báo lỗi.
+- ENGINE-P06 (chưa có): multi-run concurrency/ghi file, GPU OOM, disk full.
+
+**Sự khác biệt cần phát biểu:** tiny ENGINE-01 kiểm vòng đời; `reports/reference_run/history.json` và metrics quick cung cấp chứng cứ mô hình thật đã từng chạy. Hai loại không thể thay thế nhau. Liên quan FR07/08/10/11 và NFR03.

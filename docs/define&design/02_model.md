@@ -168,3 +168,44 @@ Văn bản review tiếng Anh
 - Kế hoạch liên quan: [`../plans/phase2.md`](../plans/phase2.md) (tokenizer/model), [`phase3.md`](../plans/phase3.md) (Trainer), [`phase4.md`](../plans/phase4.md) (persist), [`phase5.md`](../plans/phase5.md) (evaluate).
 - Đặc tả data `01_data.md`; engine `03_engine.md`; kết quả `05_evaluation_results.md`.
 - Đặc tả test `tests/02_test_model_builder.md` và `tests/03_test_engine.md`; traceability `../analysts/requirements_traceability.md`.
+
+## 11. Quyết định chọn hai checkpoint (v3.0)
+
+**ADR-M01 – Hai checkpoint cho hai mục đích:** SST-2 đã fine-tuned phù hợp Exercise 1; DistilBERT-base pretrained chưa có head IMDb phù hợp Exercise 2. **Không** thay thế bằng cùng một model nếu mục tiêu giảng dạy là phân biệt dùng model có sẵn và tự fine-tune. Consequence: khi trình bày score, nêu domain/dataset khác, không so trực tiếp.
+
+**ADR-M02 – `AutoModelForSequenceClassification` và label mapping cố định:** cho phép model class theo config; `num_labels=2`, `ID2LABEL={0:'NEGATIVE',1:'POSITIVE'}`. Contract bắt buộc logits `[B,2]` và scalar loss khi input có nhãn. `MODEL-01` chứng minh shape/loss với tiny config, không đo chất lượng pretrained.
+
+**ADR-M03 – full fine-tuning (không đóng băng encoder):** training tất cả tham số làm mô hình có thể thích nghi domain IMDb nhưng tăng chi phí so head-only. Quick run reference có 66.955.010 trainable parameters, không có lớp frozen theo summary. Không tuyên bố freeze trong bài.
+
+## 12. Kiểm toán tensor và những lỗi dễ gặp
+
+| Điểm vào | Tensor shape minh họa | Lỗi nếu sai |
+|---|---|---|
+| Raw review | `list[str]` length N | Đưa thẳng str vào model thay vì tokenizer |
+| Tokenizer | input_ids/attention_mask `[B,L]` | tokenizer lệch vocab/checkpoint làm ID sai ý nghĩa |
+| Labels | `[B]`, 0/1 | num_labels không khớp, loss invalid |
+| Encoder | hidden states theo mỗi token | sequence vượt max_length, OOM |
+| Classifier | logits `[B,2]` | nhầm logits với xác suất |
+| `predict_texts` | records text,label_id,label,confidence,p_positive | `max_length` không được dùng giống training dẫn tới khác phân phối |
+
+`L` không cố định giữa batch do dynamic padding; trong test `B=2` có logits `(2,2)`. `max_length` tính cả special tokens. Khi cần xem padding mask đúng phải dựa vào batch thật, không suy rằng mọi mask có các số 0.
+
+## 13. Phạm vi kiểm chứng model
+
+- **Có trong code:** load pretrained checkpoint, model builder với id2label, count_params, tokenizer fingerprint; no frozen params mặc định.
+- **Có test offline:** MODEL-01 cho input hợp lệ, logits `(2,2)`, scalar loss, frozen=0. Tiny model random có thể forward ngay nhưng không hiểu review thật.
+- **Có output lịch sử:** Exercise 1 predictions và quick best validation/test summary trong outputs/reference run; notebook executed.
+- **Thiếu trong ZIP:** weights best_model để người đọc tải lại mà không chạy. Trước buổi bảo vệ nên kiểm máy demo có cache hoặc checkpoint riêng, không dựa vào docs để nói “load được” nếu chưa chuẩn bị.
+- **Test đề xuất:** mismatch tokenizer vocab; bất biến `id2label`; invalid labels; inference equivalence CPU/GPU trong dung sai; cấu hình `full`; latency/memory; tham số head/backbone.
+
+## 14. So sánh lựa chọn và bài học
+
+| Phương án | Ưu điểm | Nhược điểm | Quyết định |
+|---|---|---|---|
+| Pretrained SST-2 inference | Thực hành nhanh, minh họa pipeline | Không train, domain khác IMDb | Dùng Exercise 1 |
+| Base pretrained + full fine-tune | Bám đúng mục tiêu chuyển giao/Trainer | Tốn CPU/RAM/checkpoint | Dùng Exercise 2 |
+| Train random toàn bộ | Không cần pretrained weights | Không đúng tinh thần bài và chậm hơn | Không dùng |
+| Head-only frozen encoder | Nhẹ hơn | Không phải luồng hiện tại; có thể kém hơn | Chỉ là thí nghiệm tương lai |
+| `max_length` rất lớn | Giữ nhiều text | Chi phí attention tăng, OOM | Quick=128, full=256; cần validation để thay |
+
+Để trình bày lý thuyết về self-attention, loss, distillation, xem [theory](../theory/00_theoretical_foundations.md). Ma trận mã: FR02/FR03/FR04/FR13.

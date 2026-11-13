@@ -60,3 +60,40 @@ Kiểm thử offline có thể chạy nhanh trên tiny model nhưng không chứ
 | — | — | Chưa cập nhật | — | TODO |
 
 **Báo cáo khi chuyển phase:** Nêu 1) việc đã có bằng chứng, 2) việc còn thiếu, 3) lỗi/rào cản, 4) commit/PR và 5) người xác nhận. Không sửa kết quả trong `reports/` nếu không chạy lại thật.
+
+## 8. Work package, tiến trình giải thích và cách bàn giao (bổ sung v3.0)
+
+**Mục tiêu có thể báo cáo:** Kiểm thử tổng hợp, acceptance review và bàn giao.
+
+### 8.1. Trình tự thực hiện ở mức tác vụ
+
+1. Chạy pytest trên máy bàn giao, lưu exit code, versions, log ngày thật (nếu chạy).
+2. Kiểm ma trận E/FR↔tests↔artifact; review cảnh báo và coverage gap.
+3. Demo vài UAT không cần train lại full, mở metrics JSON và confession matrix.
+4. Duyệt PR/commit, chốt missing artifacts và quyền truy cập nếu cần.
+
+### 8.2. Bằng chứng lấy từ code/ZIP, không phải báo cáo tiến độ của từng cá nhân
+
+`reports/pytest_output.txt` (lịch sử 24 passed/1 warning), `reports/VALIDATION.md`, UAT plan, ma trận FR.
+
+**Điều kiện review/Definition of Done cụ thể:** Giảng viên truy từ câu chữ yêu cầu qua code/test/evidence; giới hạn rõ, trạng thái chạy được mô tả trung thực.
+
+**Rủi ro còn lại:** Không có weights/CSV trong ZIP, version thay đổi, đăng nhầm các artifacts quá lớn hoặc nhạy cảm.
+
+### 8.3. Checklist nghiệm thu cần xác nhận bằng chứng
+
+- [ ] Chạy pytest trên máy bàn giao, lưu exit code, versions, log ngày thật (nếu chạy).
+- [ ] Kiểm ma trận E/FR↔tests↔artifact; review cảnh báo và coverage gap.
+- [ ] Demo vài UAT không cần train lại full, mở metrics JSON và confession matrix.
+- [ ] Duyệt PR/commit, chốt missing artifacts và quyền truy cập nếu cần.
+- [ ] Người kiểm tra mở đúng file code/test/output trong cột bằng chứng.
+- [ ] Nếu không chạy lại được, đánh dấu "Chưa tái kiểm chứng" thay vì tự tick.
+- [ ] Nếu chức năng đổi, cập nhật ma trận FR và link spec module liên quan.
+
+### 8.4. Nhật ký công việc dùng cho nhóm điền
+
+| Ngày giờ thực tế | Thành viên | Branch/commit/PR | Công việc có bằng chứng | Test hoặc demo đã làm | Phản hồi reviewer | Trạng thái |
+|---|---|---|---|---|---|---|
+| _Chưa điền_ | _—_ | _—_ | _—_ | _—_ | _—_ | _Not recorded_ |
+
+**Cách báo cáo phase này:** trình bày mục tiêu → một quyết định kỹ thuật và lý do → file/hàm thực tế → test/metric/manifest → hạn chế hoặc việc chưa làm. Xem [quy trình nhóm](team_workflow_and_log.md) và [ma trận yêu cầu](../analysts/requirements_traceability.md).

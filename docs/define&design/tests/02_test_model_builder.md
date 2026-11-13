@@ -49,3 +49,31 @@ Chạy `python -m pytest tests/test_model_builder.py -v`. PASS khi cả ba asser
 | MODEL-P05 | Tải checkpoint base thật và đọc config | Kiểm tra architecture và revision đã resolve khi có mạng |
 
 Mọi đề xuất ở mục 5 chỉ là backlog, không đưa vào thống kê 24 passed của code gốc.
+
+## 6. Đặc tả thủ tục MODEL-01 chi tiết (v3.0)
+
+| Trường | Nội dung |
+|---|---|
+| Test ID | MODEL-01 |
+| Function | `tests/test_model_builder.py::test_logits_loss_and_all_trainable` |
+| Fixture | `tiny_bundle` local vocab 13 tokens, DistilBERT 1-layer dim 16/head 2, synthetic data |
+| Setup | `build_model(cfg.model_id)` từ thư mục model đã `save_pretrained` local |
+| Input | 2 record tokenized, `DataCollatorWithPadding(tok)` tạo tensor batch |
+| Step | gọi `result=model(**batch)`, `count_params(model)` |
+| Expected 1 | `tuple(result.logits.shape) == (2, 2)` |
+| Expected 2 | `result.loss.ndim == 0` (scalar loss do labels hợp lệ) |
+| Expected 3 | `count_params(model)['frozen'] == 0` |
+| Failure | shape sai, missing labels, backward incompatibility, frozen count khác |
+| Bằng chứng | Test code + `reports/pytest_output.txt` của lần chạy trước |
+
+**Giới hạn oracle:** MODEL-01 **không** chứng minh encoder base 6 layers có đúng weights pretrained hoặc phân loại IMDb tốt. Tiny fixture chủ động dùng random weights để test nhanh offline. File model real được kiểm riêng qua notebook/output thực. Không gọi confusion matrix quick là đầu ra test này.
+
+### Đề xuất chưa có Python test
+
+- MODEL-P01: assert `id2label`, `label2id` và `num_labels=2` trên checkpoint.
+- MODEL-P02: tokenizer mismatch khác vocabulary phải phát hiện qua fingerprint/contract.
+- MODEL-P03: `max_length` quá 512 bị config guard báo lỗi.
+- MODEL-P04: kiểm `params.trainable` khi có chính sách freeze/unfreeze mới; không tự giả định freeze hiện có.
+- MODEL-P05: load model/tokenizer real trong môi trường sạch, xác minh revision resolved.
+
+Liên quan FR02, FR03, FR13; [model spec](../02_model.md), [lý thuyết](../../theory/00_theoretical_foundations.md).

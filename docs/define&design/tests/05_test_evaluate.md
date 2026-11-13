@@ -70,3 +70,32 @@
 - EVAL-P06: Error CSV được sort theo confidence và giới hạn 20 records.
 
 Các đề xuất trên không phải test đã được chạy.
+
+## 6. Quy trình EVAL-01..07 và expected cụ thể (v3.0)
+
+| Case | Input | Action | Expected |
+|---|---|---|---|
+| EVAL-01 | logits `[[2,0],[0,2],[2,0],[0,2]]`, labels `[0,1,1,1]` | `metrics_from_logits`, `compute_metrics` | accuracy=.75, precision=1, recall≈2/3, F1≈.8; hai API khớp |
+| EVAL-02 | logits dự đoán toàn Negative, nhãn [0,1] | metrics | precision=0, F1=0 thay vì NaN |
+| EVAL-03 | logits=[], labels=[] | metrics | ValueError N=0 |
+| EVAL-04 | logits shape `[1,3]`, labels `[0]` | metrics | ValueError shape không phải `[N,2]` |
+| EVAL-05 | logits có `NaN`, labels `[1]` | metrics | ValueError finite guard |
+| EVAL-06 | logits `[1,2]`, labels `[2]` | metrics | ValueError nhãn ngoài {0,1} |
+| EVAL-07 | synthetic raw test, logits dự đoán nhãn đúng | `export_evaluation` | accuracy=1, có confusion PNG; đảo toàn bộ label_ids → ValueError alignment |
+
+**Failure log:** traceback, logits/labels dạng ẩn danh (nếu chứa dữ liệu riêng tư thì không dump text review), version sklearn/numpy, expected computed by hand. **Bằng chứng:** `tests/test_evaluate.py`, log lịch sử. Tổng **7 test cases**.
+
+### Kiểm toán kết quả quick (bằng chứng khác với test synthetic)
+
+`test_metrics.json` lưu confusion `[[435,65],[73,427]]` → 862/1000 đúng, 138 sai. `predictions.csv` và `errors.csv` được code xuất nhưng **không có trong ZIP**, không ghi là đã audit từng dòng. Trong 138 lỗi, error CSV bình thường chỉ xuất tối đa 20 lỗi confidence cao. F1 Positive chọn để báo theo lớp Positive, macro F1 giúp xem cân bằng lớp.
+
+### Đề xuất chưa implement
+
+- EVAL-P01: logits là tuple từ Trainer với shape hợp lệ và bất hợp lệ.
+- EVAL-P02: đảo chỗ hai review **cùng nhãn**; cần sample ID fingerprint để nhận biết, vì label-only guard hiện chưa đủ.
+- EVAL-P03: all Positive, NaN/Inf extremes, nhãn 0/1 cân bằng/lệch, ROC-AUC khi chỉ có một lớp.
+- EVAL-P04: so JSON accuracy/CM với REPORT.md và PNG bằng script audit.
+- EVAL-P05: plot history thiếu key/mỗi epoch lệch, tránh chart gây hiểu nhầm.
+- REPORT-P01: unit test `write_report` đọc metrics đúng, không hardcode score.
+
+Liên quan FR09/FR12/FR14/FR15, [module evaluate](../05_evaluation_results.md), [evidence audit](../../analysts/implementation_evidence_audit.md).

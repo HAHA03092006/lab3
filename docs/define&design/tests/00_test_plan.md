@@ -74,3 +74,45 @@ Chưa có coverage bắt buộc cho GPU OOM, inference model thật khi mất In
 ## 8. Bằng chứng và nghiệm thu
 
 `reports/pytest_output.txt` ghi **24 passed, 1 warning** từ lần chạy trước khi cập nhật tài liệu. `reports/VALIDATION.md` ghi nhận một run quick pretrained thật. Để nghiệm thu trên máy mới, phải chạy lại lệnh ở mục 4. Các file tài liệu dưới `docs/define&design/tests/` chỉ mô tả phương án/expected results, không phải script tự chạy.
+
+## 9. Chiến lược kiểm thử theo tầng và mức độ rủi ro (v3.0)
+
+| Tầng | Mục đích | Ví dụ | Test gốc | Vị trí bằng chứng |
+|---|---|---|---|---|
+| Unit / pure function | Toán số và validation inputs | `metrics_from_logits`, `stratified_indices`, `save_json` | DATA/EVAL/UTIL | pytest output cũ |
+| Contract / component | Tensor, schema, labels | `build_model`, tokenization | MODEL-01, DATA-08 | pytest output cũ |
+| Integration offline | Trainer cùng optimizer/checkpoint, `resume/reuse` | stop epoch 1 → resume epoch 2 | ENGINE-01 | pytest output cũ |
+| Static notebook | Notebook parse schema/Python | `nbformat.validate` + AST parse | NOTEBOOK-01 | pytest output cũ |
+| Manual/e2e real | Kết quả pretrained E1 + IMDb quick | executed notebook + outputs | **Không nằm trong 24 pytest cases** | `reports/VALIDATION.md`, `outputs/` |
+| Khả năng mở rộng | GPU, full, calibration, drift, robustness | chưa triển khai | `*-Pxx` | Không có evidence |
+
+## 10. Entry, exit, artifacts và trách nhiệm kiểm thử
+
+**Entry:** code import được, dependencies tương thích, test fixture chạy offline, tmp_path writable, cấu hình nhãn 0/1. **Exit kỹ thuật:** pytest exit code 0 trên môi trường test, mọi case bắt buộc PASS; nếu warning thì ghi tác động. **Exit thực nghiệm:** quick output từ pretrained thật có config/manifest/history/metrics; **không** tự thay thế exit bởi notebook chỉ parse thành công. **Exit tài liệu:** spec ↔ test code ↔ matrix khớp và bằng chứng dẫn được.
+
+Vai trò đề xuất (cần điền tên thực tế): module owner xây test; reviewer xác nhận oracle/case còn thiếu; integrator chạy toàn suite; nhóm trưởng tổng hợp report. Nếu một người làm cả hai vai, ghi rõ cách review chéo. Không tự điền tên thành viên khi chưa biết.
+
+## 11. Một test case mẫu hoàn chỉnh
+
+**ID:** EVAL-01. **Mục tiêu:** metric tính đúng bằng tay. **Precondition:** nhập module `going_modular.evaluate`, có NumPy/scikit-learn. **Input:** logits `[[2,0],[0,2],[2,0],[0,2]]`, labels `[0,1,1,1]`. **Bước:** gọi `metrics_from_logits`, so các fields với oracle; gọi `compute_metrics` với cùng predictions và labels. **Expected:** accuracy `0.75`, precision `1`, recall `2/3`, F1 `0.8`; hai API cho kết quả tương đương. **Pass:** mọi assert đạt. **Fail:** khác số/NaN/exception; lưu traceback và version thư viện. **Bằng chứng:** `tests/test_evaluate.py::test_hand_calculated_metrics`, code gốc và log lịch sử.
+
+## 12. Hướng dẫn lưu chứng cứ khi cô yêu cầu demo
+
+1. Ghi `git rev-parse HEAD`, `python --version`, pip versions và `pytest` output.
+2. Chạy từng case hoặc toàn suite; không chỉnh file log cũ cho khớp môi trường.
+3. Với real experiment, ghi profile/action/seed/splits/model+dataset revisions, số epochs và checkpoint được chọn.
+4. Đối chiếu test metrics JSON với confusion matrix hình và phép tính tay.
+5. Nếu có fail, nêu loại lỗi (input test, environment, regression, version drift) và trace, không chỉ nói “đã fix”.
+
+## 13. Rủi ro còn lại theo ưu tiên
+
+| Mức | Khoảng trống | Đề xuất test (chưa implement) |
+|---|---|---|
+| Cao | Label-only alignment không bắt hoán đổi sample cùng nhãn | EVAL-P02: đảm bảo sample IDs theo prediction |
+| Cao | Weights & CSV không có trong ZIP | END2END-P01: tái xuất model and artifacts từ run thật |
+| Trung bình | `reporting.write_report` chưa có unit test | REPORT-P01: số metric trong Markdown khớp JSON |
+| Trung bình | Model/dataset `revision='main'` mutable | CONFIG-P01: snapshot pinned revisions & compatibility |
+| Trung bình | `load_imdb` thiếu dữ liệu/mất mạng | DATA-P01: explicit error/path |
+| Thấp–TB | full/multi-GPU/performance chưa chạy | E2E-P02: benchmark theo tài nguyên và seed |
+
+Đây là **đề xuất**, không phải thêm số test đã passed. Xem [kịch bản nghiệm thu](07_acceptance_scenarios.md) và [evidence audit](../../analysts/implementation_evidence_audit.md).

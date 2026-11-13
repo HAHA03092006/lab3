@@ -94,3 +94,65 @@ Hợp đồng model chi tiết gồm kiến trúc DistilBERT, input/output tenso
 3. **Test IMDb cuối:** run quick trong bản gốc có 1.000 mẫu test, accuracy **0.8620**; full profile chưa chạy. Đọc `reports/VALIDATION.md` và JSON metrics trước khi ghi số liệu.
 
 Phần sửa tài liệu không tự động thay đổi `going_modular/`, không tạo weights model còn thiếu và không tạo log kiểm thử mới.
+
+## 10. Phân tích stakeholder, use case và ranh giới hệ thống (mở rộng 3.0)
+
+**Stakeholder:** (a) sinh viên thực hiện và bảo vệ: muốn chứng minh đủ E1/E2, (b) giảng viên: muốn truy vết code/test/artifact, (c) người tái lập: muốn setup chạy lại, (d) người review: muốn phát hiện vi phạm split/lifecycle. Người dùng là người **chạy notebook** chứ không phải khách hàng sử dụng dịch vụ production. Vì vậy hệ thống ưu tiên khả năng học tập, giải thích, kiểm chứng hơn SLA triển khai.
+
+| Use case | Tác nhân | Tiền điều kiện | Luồng chính | Kết quả đo được | Ngoại lệ |
+|---|---|---|---|---|---|
+| UC01 Khám phá pretrained sentiment | Sinh viên | Đã cài dependencies / có cache | Load SST-2 → tokenize → infer thủ công/pipeline | IDs/mask/logits/JSON câu mẫu | Lỗi mạng, checkpoint không tồn tại |
+| UC02 Chuẩn bị dữ liệu | Sinh viên | Có IMDb train/test | Tạo sample_id → stratified validation → subset → clean → tokenize | DatasetDict + manifest | Thiếu nhãn, kích thước chia bất hợp lệ |
+| UC03 Fine-tune | Sinh viên | Có tokenized train/validation, run mới | Tạo TrainingArguments/Trainer → train → validation F1 → save | history, checkpoint và best_model | Thiếu tài nguyên, dừng giữa epoch, lỗi quyền ghi |
+| UC04 Phục hồi/Reuse | Sinh viên | Có contract của run, checkpoint/weights phù hợp | Validate contract → resume hoặc load best model | Không train đè, cùng dự đoán (dung sai) | Thiếu checkpoint, mismatch cấu hình |
+| UC05 Báo cáo | Sinh viên/giảng viên | Đã chọn model trên validation | Predict test → metrics/CSV/PNG → REPORT | Bảng metrics, số mẫu, confusion matrix | Alignment lệch, logits sai |
+
+### 10.1. In-scope / out-of-scope
+
+Trong phạm vi: 2 exercise, binary sentiment tiếng Anh, fine-tuning DistilBERT bằng Trainer, tái sử dụng module, báo cáo quick theo artifacts. Ngoài phạm vi: mô hình tiếng Việt, service API, bảo đảm fairness giữa các ngôn ngữ, đánh giá đa seed, hyperparameter optimization quy mô lớn, đánh giá full nếu chưa chạy. Không suy ra kết quả mới chỉ từ việc viết thêm docs.
+
+## 11. Đặc tả I/O cấp hệ thống
+
+| Đầu vào | Schema / điều kiện | Đầu ra | Nguồn kiểm chứng |
+|---|---|---|---|
+| Câu tiếng Anh | `str`, mã hóa văn bản hợp lệ; inference expects list không rỗng | Nhãn và `p_positive`, confidence | `predict_texts`, E1 predictions |
+| IMDb | `DatasetDict` gồm `train`, `test`; columns `text` và nhãn 0/1 | `train`,`validation`,`test` sau split và tokenized DatasetDict | `data_setup.py`, manifest |
+| RunConfig | Python dataclass; `run_id` chỉ `[A-Za-z0-9_-]`, LR > 0, `8≤max_length≤512` | `config.json` + run directory | UTIL test và config code |
+| Logits | `float[N,2]`, finite; nhãn `int[N]` thuộc {0,1} | Accuracy/precision/recall/F1/macro F1 | EVAL tests |
+| Run artifact | `config/manifest/history/completed/best_model` tuỳ action | Trainer, predictions, report | ENGINE-01 + output quick |
+
+**Khối nguồn dữ liệu** không được quyết định checkpoint tốt nhất. **Khối huấn luyện** không nhìn test. **Khối đánh giá** không cập nhật model. **Khối báo cáo** không tự chế metrics. Những nguyên tắc này làm cơ sở tách module và giảm rủi ro tự đánh giá sai.
+
+## 12. Các bất biến và giả định có thể phản biện
+
+- Train và validation không giao nhau theo **ID**; `test` giữ từ split benchmark gốc. Nếu có review trùng text giữa splits phải khai báo `duplicate_text_overlap` theo exact hash; giá trị 0 trong run quick không chứng minh không có trùng ngữ nghĩa hoặc đạo văn.
+- `model_id` SST-2 ở Exercise 1 dùng cho inference, `model_id` base ở Exercise 2 dùng fine-tune. Hai bài khác nhau về nguồn head và cách tạo weights; không so accuracy trực tiếp trên tập khác nhau.
+- `metric_for_best_model='f1'` là validation F1 Positive; không chọn checkpoint bằng test F1.
+- Một lần run có `run_id` duy nhất. Khi action `reuse/resume`, contract gồm config, manifest digest, tokenizer identity phải khớp; **action** không nằm trong contract để không gây mismatch giả tạo.
+- Lần chạy quick trong ZIP: 2.000 train/500 validation/1.000 test và test accuracy 0.8620; **không phải** benchmark full.
+- `trainer.predict` trả kết quả theo thứ tự dataset tokenized; export kiểm tra `label_ids` với `raw_test['label']`. Kiểm chỉ theo nhãn không chứng minh được đảo vị trí giữa hai mẫu **cùng nhãn**; coi đây là điểm còn có thể gia cố.
+- Không có ngưỡng accuracy bắt buộc trong đặc tả. Tiêu chí kỹ thuật là tính hợp lệ của quy trình và bằng chứng thực nghiệm trung thực.
+
+## 13. Yêu cầu chất lượng NFR và kiểm chứng
+
+| NFR | Yêu cầu | Cách kiểm chứng / giới hạn |
+|---|---|---|
+| NFR01 | Tách test khỏi train/validation | `Trainer(...train_dataset,eval_dataset...)` + manifest; không có oracle phát hiện mọi kiểu leakage |
+| NFR02 | Tái lập thiết lập | seed, IDs, digest, logs; không cam kết bitwise giữa CPU/GPU |
+| NFR03 | An toàn artifact | từ chối train khi thư mục không trống, atomic JSON; không bảo đảm transactional writes toàn pipeline |
+| NFR04 | Truy nguyên model/dataset | model revision log có thể là SHA, dataset revision `main` là động |
+| NFR05 | Báo cáo không đánh tráo kết quả | tách quick/full/offline tests rõ ràng; review bằng metrics JSON |
+| NFR06 | Dễ kiểm thử và bảo trì | module hóa & pytest; chưa đo coverage dòng/nhánh |
+| NFR07 | Tương thích môi trường đã chỉ định | requirements Python 3.10–3.12, Colab/VS Code; tuỳ thiết bị/driver |
+| NFR08 | Minh bạch giới hạn và thông tin nhạy cảm | không đưa token/HF credentials vào docs; CSV review thô không nằm trong ZIP |
+
+## 14. Thứ tự trình bày đề xuất trong báo cáo
+
+1. Chỉ slide yêu cầu E1.1..E2.7 và sơ đồ 2 bài.
+2. Thuyết minh sơ đồ data → model → Trainer → evaluate và các ranh giới split.
+3. Nêu 4 quyết định thiết kế quan trọng: 2 checkpoints, stratified subset, best validation F1, run contract.
+4. Lật ma trận FR đã chuẩn hóa và chứng minh 2 yêu cầu bất kỳ bằng file code/test/output.
+5. Đưa `test_metrics.json` (quick 86,2%) cùng confusion matrix và giới hạn.
+6. Kết luận cái gì đã chạy, cái gì chưa chạy, sửa cái gì để đủ chất lượng hơn.
+
+**Tài liệu bổ sung:** [phân tích yêu cầu](../analysts/requirements_analysis.md), [ma trận FR](../analysts/requirements_traceability.md), [kiến trúc](06_architecture_and_interfaces.md), [lý thuyết](../theory/00_theoretical_foundations.md), [hướng dẫn vấn đáp](../presentation/defense_guide.md).

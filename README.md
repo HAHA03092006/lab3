@@ -34,7 +34,7 @@ Notebook cung cấp các biến profile/action (xem code cell đầu) cho từng
 
 ```text
 Lab3/
-├── Readme.md
+├── README.md
 ├── requirements.txt
 ├── pytest.ini
 ├── .gitignore
@@ -58,8 +58,17 @@ Lab3/
 │   ├── test_evaluate.py
 │   └── test_notebook.py
 ├── docs/
-│   ├── analysts/
-│   │   └── requirements_traceability.md
+│   ├── README.md                            # Mục lục docs mới
+│   ├── CHANGES_DOCS.md                     # Tóm tắt bản chỉnh lý
+│   ├── analysts/                          # Yêu cầu, ADR và kiểm toán bằng chứng
+│   │   ├── requirements_analysis.md
+│   │   ├── requirements_traceability.md
+│   │   ├── design_decisions.md
+│   │   └── implementation_evidence_audit.md
+│   ├── theory/                            # Cơ sở lý thuyết DistilBERT/NLP
+│   │   └── 00_theoretical_foundations.md
+│   ├── presentation/                      # Hướng dẫn bảo vệ/vấn đáp
+│   │   └── defense_guide.md
 │   ├── define&design/                     # CÂY ĐẶC TẢ CHÍNH ĐƯỢC GIỮ
 │   │   ├── 00_lab3_description.md
 │   │   ├── 01_data.md
@@ -67,6 +76,7 @@ Lab3/
 │   │   ├── 03_engine.md
 │   │   ├── 04_utils.md
 │   │   ├── 05_evaluation_results.md
+│   │   ├── 06_architecture_and_interfaces.md
 │   │   └── tests/
 │   │       ├── 00_test_plan.md
 │   │       ├── 01_test_data_setup.md
@@ -74,7 +84,8 @@ Lab3/
 │   │       ├── 03_test_engine.md
 │   │       ├── 04_test_utils.md
 │   │       ├── 05_test_evaluate.md
-│   │       └── 06_test_notebook.md
+│   │       ├── 06_test_notebook.md
+│   │       └── 07_acceptance_scenarios.md
 │   └── plans/
 │       ├── implementation_plan.md         # Kế hoạch tổng, phân công và nghiệm thu
 │       ├── phase0.md                      # Yêu cầu và môi trường
@@ -84,12 +95,13 @@ Lab3/
 │       ├── phase4.md                      # Checkpoint/resume/reuse
 │       ├── phase5.md                      # Evaluation/error analysis
 │       ├── phase6.md                      # Notebook/README/báo cáo
-│       └── phase7.md                      # Test và bàn giao
+│       ├── phase7.md                      # Test và bàn giao
+│       └── team_workflow_and_log.md      # Phân công và nhật ký mẫu
 ├── reports/                               # Validation, log và thuyết minh gốc
 └── outputs/                               # Artifacts từ lần chạy quick có sẵn
 ```
 
-**Quy ước:** Chỉ có một thư mục đặc tả `Lab3/docs/define&design/`. Không tạo lại `define&designt` hoặc cây `lab3/` khác; chú ý tên viết hoa/thường khi push GitHub, đặc biệt `Readme.md`.
+**Quy ước:** Chỉ có một thư mục đặc tả `Lab3/docs/define&design/`. Không tạo lại `define&designt` hoặc cây `lab3/` khác; chú ý tên viết hoa/thường khi push GitHub, đặc biệt `README.md`.
 
 ## 4. Kế hoạch triển khai theo phase và đặc tả
 
@@ -179,4 +191,8 @@ Các số trên lấy từ file kết quả quick trong ZIP đầu vào và đ�
 
 ## 10. Nghiệm thu và quy ước commit
 
-Trước khi nộp, xem checklist P7, chạy pytest trong môi trường đủ dependencies, đọc log thực tế và so sánh `Readme.md`, model spec với `RunConfig`. Nếu chỉ sửa đặc tả, Git diff nên chỉ chứa các file Markdown liên quan, **không chỉnh code hoặc ghi đè outputs/ bằng kết quả bịa**. Pull Request nên mô tả cụ thể 8 phase, test specs, bổ sung model, chỉnh README và giới hạn chưa thực nghiệm.
+Trước khi nộp, xem checklist P7, chạy pytest trong môi trường đủ dependencies, đọc log thực tế và so sánh `README.md`, model spec với `RunConfig`. Nếu chỉ sửa đặc tả, Git diff nên chỉ chứa các file Markdown liên quan, **không chỉnh code hoặc ghi đè outputs/ bằng kết quả bịa**. Pull Request nên mô tả cụ thể 8 phase, test specs, bổ sung model, chỉnh README và giới hạn chưa thực nghiệm.
+
+## Hồ sơ docs phục vụ báo cáo
+
+Bắt đầu từ [mục lục tài liệu Lab 3](docs/README.md), [ma trận FR đã đồng bộ](docs/analysts/requirements_traceability.md) và [hướng dẫn vấn đáp](docs/presentation/defense_guide.md). Các tài liệu nêu rõ ranh giới bằng chứng quick/full, 24 pytest cases lịch sử và những artifacts chưa có trong ZIP.

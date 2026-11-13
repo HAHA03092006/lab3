@@ -64,3 +64,33 @@ Tổng **8 pytest cases** thuộc file này (1+5+1+1). Thực hiện `python -m 
 - DATA-P04: Kiểm tra `load_imdb` xử lý offline/cache, revision không tồn tại khi có harness phù hợp.
 
 **Không cộng các ý trên vào số test passed.**
+
+## 5. Quy trình test dữ liệu và expected cụ thể (bổ sung v3.0)
+
+| Case | Setup/Input | Action | Expected/Oracle | Test source |
+|---|---|---|---|---|
+| DATA-01 | 50 nhãn 0, 50 nhãn 1; val_size=20, seed=42 | `stratified_indices` gọi hai lần | 20 val: 10 mỗi lớp; train/val disjoint; cùng seed cùng indices; seed 43 khác | `test_split_balanced_disjoint_reproducible` |
+| DATA-02 | labels=[], size=2 | split | ValueError | `test_invalid_split` tham số #1 |
+| DATA-03 | labels=[0,0,0,0], size=2 | split | ValueError vì thiếu lớp | `test_invalid_split` #2 |
+| DATA-04 | labels=[0,1,0,1], size=1 | split | ValueError vì val_size quá nhỏ | `test_invalid_split` #3 |
+| DATA-05 | labels=[0,1,0,1], size=4 | split | ValueError vì không chừa train | `test_invalid_split` #4 |
+| DATA-06 | labels=[0,2,0,2], size=2 | split | ValueError vì labels không phải {0,1} | `test_invalid_split` #5 |
+| DATA-07 | `' Not<br /> bad &amp; good!  '` | `clean_text` | `'Not bad & good!'` | `test_clean_keeps_negation` |
+| DATA-08 | tiny raw train 24/test 8 | `prepare_raw_splits` & tokenize & manifest | train 16, val 8, disjoint; columns IDs/mask/labels; len<=32; manifest stable | `test_tokenization_and_identity` |
+
+### Bản ghi cần lưu nếu test fail
+
+- `pytest -q tests/test_data_setup.py -vv` cùng Python/datasets/scikit-learn versions.
+- Nếu lệch class balance: kiểm nhãn gốc, seed, stratify; không sửa nhãn test để đạt.
+- Nếu sai text clean: so HTML `<br>`, entities, khoảng trắng; bảo toàn từ phủ định.
+- Nếu token shape sai: kiểm tokenizer version, max_length, dynamic padding tại collator.
+
+### Kiểm thử đề xuất chưa hiện thực
+
+- DATA-P01: trường `text` rỗng, None hoặc không phải string.
+- DATA-P02: multiple duplicated texts với labels khác và exact hash overlap report.
+- DATA-P03: data revision/row index đổi, manifest digest phải đổi.
+- DATA-P04: random seed reproducibility theo nhiều splits/data sizes cân bằng và rất lệch.
+- DATA-P05: load offline khi cache trống và thông báo lỗi rõ ràng.
+
+Các test `DATA-Pxx` không thuộc 24 cases. **FR/NFR liên quan:** FR05/FR06, NFR01/NFR02. Bằng chứng real của data chỉ ở manifest run quick, không phải kết luận về full IMDb.

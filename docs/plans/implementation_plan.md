@@ -100,3 +100,64 @@ python -m pytest tests/test_engine.py -v
 ```
 
 Không tự động chạy huấn luyện chỉ để kiểm thử docs. Khi nhóm muốn tái lập mô hình thật, mở `notebooks/huggingface_sentiment.ipynb`, chọn cấu hình/action tương ứng và chuẩn bị mạng/bộ nhớ. Lần chạy quick hiện lưu trong `reports/VALIDATION.md`; đó là bằng chứng lịch sử của bản gốc, không phải kết quả phát sinh khi sửa tài liệu.
+
+## 9. Work Breakdown Structure (WBS) và quản lý phụ thuộc (bản v3.0)
+
+| Mã công việc | Phụ thuộc | Deliverable | Review gate | Phạm vi kiểm chứng hiện có |
+|---|---|---|---|---|
+| WBS-00 | Bắt đầu | Requirements & environment | E1/E2 rõ, RunConfig nhập hợp lệ | Có specs, requirements, config |
+| WBS-01 | WBS-00 | Raw splits, sample IDs, manifest | Disjoint IDs, stratify labels | DATA tests + quick manifest |
+| WBS-02 | WBS-00/01 | E1 sentiment & tokenized data E2 | Token IDs/masks, 2 logits, labels correct | E1 output + MODEL/DATA tests |
+| WBS-03 | WBS-01/02 | TrainingArguments và Trainer | Best validation F1, no test in train | `engine.py`, quick history |
+| WBS-04 | WBS-03 | Artifact lifecycle | No overwrites, resume/reuse contract | ENGINE/UTIL tests |
+| WBS-05 | WBS-04 | Test prediction & reports | Metrics from real logits, alignment | Quick metrics/PNG/REPORT |
+| WBS-06 | WBS-02..05 | Notebook + thuyết minh | Code/doc/outputs khớp | Executed notebook + report |
+| WBS-07 | WBS-00..06 | Test/UAT/handover | 24 existing tests + limitations documented | Old log/validation, not new run |
+
+WBS biểu diễn **thứ tự kỹ thuật**, không phải lịch sử chứng minh từng cá nhân đã làm gì. Các nội dung còn thiếu, như test report độc lập và pin dataset revision SHA, là công việc cải tiến nên không tự điền ngày hoàn thành.
+
+## 10. Phân loại rủi ro và phương án xử lý khi trình bày
+
+| ID | Rủi ro | Xác suất / tác động (định tính) | Chỉ báo sớm | Biện pháp | Bằng chứng cần lưu |
+|---|---|---|---|---|---|
+| R01 | Dùng test để tune model | TB / Cao | Eval nhiều lần trên test khi đổi LR | Chỉ select bằng validation | Trainer args, notebook order |
+| R02 | Quick subset lệch nhãn | TB / Cao | Một lớp chiếm đa số | Stratified sampling | split manifest labels |
+| R03 | Tokenizer/model mismatch | Thấp–TB / Cao | IDs lạ, logits bất thường | Shared model ID/revision, tokenizer identity | config.json/sha |
+| R04 | OOM/disk full | TB / Cao | Torch OOM, checkpoint hỏng | quick profile, giới hạn seq/batch, output dirs | error trace, resource notes |
+| R05 | Resume nhầm run | TB / Cao | Contract mismatch | `check_action`, new run_id | config, ENGINE tests |
+| R06 | Docs không khớp code | TB / Cao | FR trùng nghĩa, link lỗi, nói full đã chạy | ma trận FR chuẩn, code review | diff docs, audit links |
+| R07 | Không có weights khi demo | Cao nếu dùng ZIP đơn thuần / Cao | Missing best_model.safetensors | tải checkpoint hợp lệ hoặc demo outputs lịch sử minh bạch | link/model checksum thực |
+| R08 | Metrics không đúng confusion | TB / Cao | TP/TN/FP/FN bị đọc ngược | tính toán tay 4 ô và cross-check JSON | calculation memo |
+| R09 | Model revision drift | TB / TB | Hub main đổi | pin SHA trong run tái lập | resolved SHA, versions |
+
+Các mức định tính là **đánh giá lập kế hoạch**, không phải xác suất thống kê đã đo.
+
+## 11. Mẫu chất lượng ở mỗi checkpoint (gates)
+
+- **G0 – Spec ready:** mục tiêu, input, output, acceptance, test idea và owner dự kiến rõ; không có FR trùng nghĩa.
+- **G1 – Module ready:** API contract, exception, unit test tối thiểu; docs lý giải lựa chọn.
+- **G2 – Integration ready:** dữ liệu, model và Trainer đi cùng nhau; không dùng test để chọn hyperparameters.
+- **G3 – Experiment ready:** log config+versions, split manifest, history, completed marker, test metrics.
+- **G4 – Report ready:** số liệu trong slides/REPORT và JSON khớp; thống nhất quick/full, nêu giới hạn.
+- **G5 – Handover ready:** link GitHub, README, docs index, notebook, test records; nếu thiếu weights ghi hướng truy xuất.
+
+## 12. Quy trình PR, review và xử lý thay đổi yêu cầu
+
+1. Mở issue hoặc ghi yêu cầu thay đổi với `E/FR/NFR` chịu ảnh hưởng, tác động lên dữ liệu/model/tests.
+2. Tạo branch (`docs/traceability-fix`, `feature/...`, `fix/...`) từ `main` mới nhất; commit atomic cho từng mục tiêu.
+3. Owner cập nhật spec và code; reviewer kiểm ma trận FR↔API↔tests, những số liệu có thật, đường dẫn nội bộ.
+4. Chạy `pytest` nếu có thay code; sửa docs thuần thì audit link/schema/citation, không khẳng định chạy model.
+5. Merge sau review; chụp link PR/commit và ghi vào worklog mẫu [quy trình nhóm](team_workflow_and_log.md).
+6. Nếu regression, rollback commit liên quan thay vì xóa lịch sử; giữ artifacts run với ID khác để có thể đối chiếu.
+
+## 13. Kế hoạch bàn giao tài liệu phục vụ cô chấm
+
+| Mục cô xem | Mở gì đầu tiên | Dẫn tiếp tới |
+|---|---|---|
+| “Làm việc như thế nào?” | `../README.md` → kế hoạch này | `team_workflow_and_log.md` và P0–P7 |
+| “Yêu cầu nào được làm?” | `../analysts/requirements_analysis.md` | `requirements_traceability.md` |
+| “Tại sao thiết kế vậy?” | `../analysts/design_decisions.md` | `../theory/00_theoretical_foundations.md`, spec module |
+| “Test những gì?” | `../define&design/tests/00_test_plan.md` | test cases DATA/MODEL/ENGINE/UTIL/EVAL/NOTEBOOK |
+| “Kết quả thật ở đâu?” | `../analysts/implementation_evidence_audit.md` | `../../reports/VALIDATION.md`, `../../outputs/` |
+
+**Không tự ký tên, không tự tích completed** nếu nhóm chưa đối chiếu evidence/commit. Đây là tài liệu để điền tiến độ thật, không phải cách trang trí hồ sơ.

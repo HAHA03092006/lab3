@@ -60,3 +60,40 @@ Thiết lập Trainer đúng siêu tham số, theo dõi validation và chọn be
 | — | — | Chưa cập nhật | — | TODO |
 
 **Báo cáo khi chuyển phase:** Nêu 1) việc đã có bằng chứng, 2) việc còn thiếu, 3) lỗi/rào cản, 4) commit/PR và 5) người xác nhận. Không sửa kết quả trong `reports/` nếu không chạy lại thật.
+
+## 8. Work package, tiến trình giải thích và cách bàn giao (bổ sung v3.0)
+
+**Mục tiêu có thể báo cáo:** Cấu hình và thực hiện fine-tuning bằng Trainer.
+
+### 8.1. Trình tự thực hiện ở mức tác vụ
+
+1. Chốt hyperparams từ RunConfig, giải thích AdamW/LR/warmup/clipping/epochs.
+2. Định nghĩa TrainingArguments eval/save mỗi epoch và chọn best theo F1 Positive trên validation.
+3. Trainer chỉ dùng train và validation; log loss/metric và checkpoint theo epoch.
+4. Trước khi xem test, chọn best validation checkpoint và lưu history.
+
+### 8.2. Bằng chứng lấy từ code/ZIP, không phải báo cáo tiến độ của từng cá nhân
+
+`engine.make_training_args`, `run_experiment`, reference history/completed, ENGINE-01.
+
+**Điều kiện review/Definition of Done cụ thể:** Có 1 run record cho train/validation; dừng sớm không ghi completed, best theo validation F1; không lấy kết quả test để select.
+
+**Rủi ro còn lại:** CPU chậm/OOM, giữa epoch chưa có checkpoint, lệch metric key khi update thư viện.
+
+### 8.3. Checklist nghiệm thu cần xác nhận bằng chứng
+
+- [ ] Chốt hyperparams từ RunConfig, giải thích AdamW/LR/warmup/clipping/epochs.
+- [ ] Định nghĩa TrainingArguments eval/save mỗi epoch và chọn best theo F1 Positive trên validation.
+- [ ] Trainer chỉ dùng train và validation; log loss/metric và checkpoint theo epoch.
+- [ ] Trước khi xem test, chọn best validation checkpoint và lưu history.
+- [ ] Người kiểm tra mở đúng file code/test/output trong cột bằng chứng.
+- [ ] Nếu không chạy lại được, đánh dấu "Chưa tái kiểm chứng" thay vì tự tick.
+- [ ] Nếu chức năng đổi, cập nhật ma trận FR và link spec module liên quan.
+
+### 8.4. Nhật ký công việc dùng cho nhóm điền
+
+| Ngày giờ thực tế | Thành viên | Branch/commit/PR | Công việc có bằng chứng | Test hoặc demo đã làm | Phản hồi reviewer | Trạng thái |
+|---|---|---|---|---|---|---|
+| _Chưa điền_ | _—_ | _—_ | _—_ | _—_ | _—_ | _Not recorded_ |
+
+**Cách báo cáo phase này:** trình bày mục tiêu → một quyết định kỹ thuật và lý do → file/hàm thực tế → test/metric/manifest → hạn chế hoặc việc chưa làm. Xem [quy trình nhóm](team_workflow_and_log.md) và [ma trận yêu cầu](../analysts/requirements_traceability.md).

@@ -60,3 +60,40 @@ Sau khi chọn checkpoint bằng validation, gọi Trainer.predict một lượt
 | — | — | Chưa cập nhật | — | TODO |
 
 **Báo cáo khi chuyển phase:** Nêu 1) việc đã có bằng chứng, 2) việc còn thiếu, 3) lỗi/rào cản, 4) commit/PR và 5) người xác nhận. Không sửa kết quả trong `reports/` nếu không chạy lại thật.
+
+## 8. Work package, tiến trình giải thích và cách bàn giao (bổ sung v3.0)
+
+**Mục tiêu có thể báo cáo:** Đánh giá cuối có thể kiểm toán và phân tích lỗi.
+
+### 8.1. Trình tự thực hiện ở mức tác vụ
+
+1. Dùng Trainer.predict trên tokenized test sau khi chốt best validation model.
+2. Kiểm `label_ids`/raw label và logits shape, tính accuracy/PR/F1/macroF1/AUC.
+3. Xuất JSON/CSV/PNG, viết REPORT từ metrics thật, không hardcode.
+4. Tính lại 4 ô confusion matrix bằng tay; đưa giới hạn truncation và top errors.
+
+### 8.2. Bằng chứng lấy từ code/ZIP, không phải báo cáo tiến độ của từng cá nhân
+
+`evaluate.py`, `reporting.py`, EVAL-01..07, output quick metrics JSON/PNG/REPORT.
+
+**Điều kiện review/Definition of Done cụ thể:** Quick metrics đúng N=1000, cm [[435,65],[73,427]], accuracy=.862; không claim full, CSV không trong ZIP.
+
+**Rủi ro còn lại:** Lệch raw/test, sample cùng nhãn swap không phát hiện, dùng test để tuning, thiếu CSV gốc.
+
+### 8.3. Checklist nghiệm thu cần xác nhận bằng chứng
+
+- [ ] Dùng Trainer.predict trên tokenized test sau khi chốt best validation model.
+- [ ] Kiểm `label_ids`/raw label và logits shape, tính accuracy/PR/F1/macroF1/AUC.
+- [ ] Xuất JSON/CSV/PNG, viết REPORT từ metrics thật, không hardcode.
+- [ ] Tính lại 4 ô confusion matrix bằng tay; đưa giới hạn truncation và top errors.
+- [ ] Người kiểm tra mở đúng file code/test/output trong cột bằng chứng.
+- [ ] Nếu không chạy lại được, đánh dấu "Chưa tái kiểm chứng" thay vì tự tick.
+- [ ] Nếu chức năng đổi, cập nhật ma trận FR và link spec module liên quan.
+
+### 8.4. Nhật ký công việc dùng cho nhóm điền
+
+| Ngày giờ thực tế | Thành viên | Branch/commit/PR | Công việc có bằng chứng | Test hoặc demo đã làm | Phản hồi reviewer | Trạng thái |
+|---|---|---|---|---|---|---|
+| _Chưa điền_ | _—_ | _—_ | _—_ | _—_ | _—_ | _Not recorded_ |
+
+**Cách báo cáo phase này:** trình bày mục tiêu → một quyết định kỹ thuật và lý do → file/hàm thực tế → test/metric/manifest → hạn chế hoặc việc chưa làm. Xem [quy trình nhóm](team_workflow_and_log.md) và [ma trận yêu cầu](../analysts/requirements_traceability.md).
