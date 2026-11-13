@@ -6,7 +6,7 @@ Cấu hình có hiệu lực nằm trong `going_modular/config.py`; notebook ch�
 
 ## 1. Bối cảnh và vấn đề
 
-Lab 2 tái sử dụng mô hình pretrained xử lý ảnh. Lab 3 chuyển cùng tư duy sang NLP:
+Lab 3 chuyển cùng tư duy sang NLP:
 biến review thành tensor mà Transformer hiểu, sử dụng checkpoint pretrained, rồi thích nghi với nhãn nhị phân.
 Cần phân biệt **inference từ model đã học sentiment** và **fine-tune từ encoder nền**.
 Nếu chỉ gọi pipeline thì chưa hoàn thành Exercise 2; nếu train model random thì chưa đáp ứng pretrained.
@@ -20,7 +20,7 @@ Nếu chỉ gọi pipeline thì chưa hoàn thành Exercise 2; nếu train model
 | O3 | Chuẩn bị tập train/validation/test không dùng test để chọn tham số | Manifest và Trainer eval_dataset |
 | O4 | Fine-tune DistilBERT nền bằng Trainer | Log loss/LR, checkpoint, history |
 | O5 | Đánh giá và nạp lại mô hình đã học | Metrics, confusion matrix, round-trip inference |
-| O6 | Code dễ đọc, kiểm thử và tái sử dụng theo Lab 2 | Module specs và tests |
+| O6 | Code dễ đọc và kiểm thử| Module specs và tests |
 
 ## 3. Phạm vi
 
@@ -65,7 +65,6 @@ Input model: input_ids[B,L], attention_mask[B,L], labels[B]. Output logits[B,2],
 
 Xem bảng profile ở README; RunConfig.for_profile là nguồn cấu hình.
 `run_id` chỉ gồm chữ/số/_/-. Artifact contract gồm config, digest manifest và danh tính tokenizer.
-Action không nằm trong contract: chuyển train → resume không tự làm contract khác nhau như lỗi Lab 2.
 Không tự ép action; khi có artifacts người dùng chọn resume/reuse hoặc tên run mới.
 
 ## 8. Tiêu chí nghiệm thu

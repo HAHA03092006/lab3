@@ -4,7 +4,7 @@
 
 ## 1. Bài toán thiết kế
 
-Nếu để toàn bộ logic trong notebook, code khó unit test, mỗi lần restart kernel khó phát hiện dữ liệu bị lẫn, file output có thể bị ghi đè và báo cáo có nguy cơ nhập nhầm con số. Thiết kế hiện tại sử dụng notebook như **orchestrator hiển thị**, `going_modular/` cho logic có thể import, `tests/` cho kiểm thử offline, `reports/outputs` cho bằng chứng. Đây là cách vận dụng modular pipeline từ Lab 2 sang NLP.
+Nếu để toàn bộ logic trong notebook, code khó unit test, mỗi lần restart kernel khó phát hiện dữ liệu bị lẫn, file output có thể bị ghi đè và báo cáo có nguy cơ nhập nhầm con số. Thiết kế hiện tại sử dụng notebook như **orchestrator hiển thị**, `going_modular/` cho logic có thể import, `tests/` cho kiểm thử offline, `reports/outputs` cho bằng chứng.
 
 ## 2. Sơ đồ luồng dữ liệu — E1 và E2 độc lập
 

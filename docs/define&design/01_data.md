@@ -39,7 +39,7 @@ sau clean. Không xóa train dựa vào nội dung test; nếu cần đánh giá
 
 ## 5. Tensor và ý nghĩa
 
-`input_ids`: token trong vocabulary, kiểu integer; không normalize IDs như pixel ảnh Lab 2.
+`input_ids`: token trong vocabulary, kiểu integer
 `attention_mask`: 1 cho token thật, 0 cho padding. `labels`: integer 0/1 cho cross-entropy.
 Kích thước L thay đổi giữa batch, không vượt max_length. `[CLS]/[SEP]` nằm trong giới hạn token.
 Review dài bị cắt; đây là trade-off tài nguyên, cần ghi trong báo cáo.

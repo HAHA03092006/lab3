@@ -11,5 +11,4 @@ IMDb do Stanford NLP cung cấp, dùng trong bối cảnh bài tập học thu�
 https://huggingface.co/datasets/stanfordnlp/imdb và https://ai.stanford.edu/~amaas/data/sentiment/.
 Gói source không chứa toàn bộ dataset; outputs có các review dự đoán phục vụ phân tích thực nghiệm.
 
-Tham khảo cấu trúc repo Lab 2 của nhóm, không đóng gói lại repo hoặc PDF sách/slide gốc.
 Các thư viện được cài từ requirements; giấy phép thư viện nằm trong distributions tương ứng.

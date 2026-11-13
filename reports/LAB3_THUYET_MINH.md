@@ -4,7 +4,7 @@
 
 Bài thực hành giúp hiểu cách sử dụng mô hình đã huấn luyện và cách thích nghi mô hình với dữ liệu mới.
 Hai bài dùng cùng kiểu nhiệm vụ phân loại cảm xúc, nhưng khác giai đoạn: bài 1 suy luận trên câu mẫu;
-bài 2 cập nhật tham số bằng dữ liệu có nhãn. Cấu trúc code kế thừa Lab 2 để tái sử dụng và kiểm thử.
+bài 2 cập nhật tham số bằng dữ liệu có nhãn. 
 
 ## 2. Cơ sở lý thuyết
 
@@ -20,7 +20,6 @@ head hai lớp mới và học trên IMDb. LR nhỏ giúp cập nhật biểu di
 Mô hình không nhận trực tiếp chuỗi Python. Tokenizer tách thành subword, ánh xạ thành ID trong vocabulary,
 thêm token đặc biệt. Attention mask phân biệt token thật và padding. Khi batch gồm chuỗi dài ngắn khác nhau,
 collator đệm đến chuỗi dài nhất; truncation kiểm soát giới hạn độ dài.
-Không dùng normalizing pixel từ Lab 2 cho token IDs; không bỏ từ phủ định vì có thể đảo nghĩa cảm xúc.
 
 ### 2.3. Phân loại hai lớp
 
