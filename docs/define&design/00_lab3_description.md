@@ -1,6 +1,6 @@
 # Đặc tả tổng quan Lab 3 — Hugging Face
 
-**Phiên bản:** 1.0 · **Ngày:** 11/11/2026 · **Nguồn đề:** slide Chương 4, trang 25.
+**Phiên bản:** 2.0 · **Ngày tạo:** 11/11/2026 · **Cập nhật đặc tả:** 11/11/2026 · **Nguồn đề:** slide Chương 4, trang 25.
 Tài liệu mô tả thiết kế hiện thực; trạng thái thực nghiệm nằm tại `reports/VALIDATION.md`.
 Cấu hình có hiệu lực nằm trong `going_modular/config.py`; notebook chỉ chọn profile và action.
 
@@ -79,3 +79,18 @@ Không tự ép action; khi có artifacts người dùng chọn resume/reuse ho�
 7. Kiểm thử offline đạt; báo cáo phân biệt test phần mềm với thí nghiệm pretrained thật.
 
 Không đặt ngưỡng accuracy tùy ý để coi đạt đề. Chất lượng phải diễn giải theo cấu hình và tập đánh giá.
+
+
+## 9. Kế hoạch theo phase và trách nhiệm kiểm chứng (bổ sung phiên bản 2.0)
+
+Tài liệu tổng này liên kết với [kế hoạch tổng](../plans/implementation_plan.md) và 8 file chi tiết: [P0 môi trường](../plans/phase0.md), [P1 dữ liệu](../plans/phase1.md), [P2 tokenizer/model](../plans/phase2.md), [P3 Trainer](../plans/phase3.md), [P4 checkpoint/lifecycle](../plans/phase4.md), [P5 đánh giá](../plans/phase5.md), [P6 notebook/báo cáo](../plans/phase6.md), [P7 kiểm thử/bàn giao](../plans/phase7.md). Mỗi file có checklist chưa mặc định đánh dấu, đầu ra, tiêu chí nghiệm thu và nhật ký để ghi tên/ngày làm sau khi nhóm phân công.
+
+Hợp đồng model chi tiết gồm kiến trúc DistilBERT, input/output tensor, cấu hình quick/full, checkpoint IDs và điều kiện kiểm thử trong [`02_model.md`](02_model.md). Bộ test specs theo case IDs DATA/MODEL/ENGINE/UTIL/EVAL/NOTEBOOK ở [`tests/00_test_plan.md`](tests/00_test_plan.md), truy vết tổng tại [`../analysts/requirements_traceability.md`](../analysts/requirements_traceability.md).
+
+### Phân biệt ba mức bằng chứng
+
+1. **Test phần mềm:** pytest trong ZIP đầu vào ghi 24 passed; kiểm các bất biến trên tiny model/data synthetic, không đo accuracy mô hình pretrained thật.
+2. **Validation training:** đánh giá trên validation để chọn checkpoint tốt nhất theo F1 Positive; không phải kết quả test cuối.
+3. **Test IMDb cuối:** run quick trong bản gốc có 1.000 mẫu test, accuracy **0.8620**; full profile chưa chạy. Đọc `reports/VALIDATION.md` và JSON metrics trước khi ghi số liệu.
+
+Phần sửa tài liệu không tự động thay đổi `going_modular/`, không tạo weights model còn thiếu và không tạo log kiểm thử mới.

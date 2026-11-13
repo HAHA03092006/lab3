@@ -67,3 +67,12 @@ Cách đơn giản an toàn hơn cho bài thực hành: đổi run_id và train 
 Integration test tạo model nhỏ local, train 1/2 epochs rồi callback dừng sau save;
 resume đến đủ 2 epochs, kiểm tra global_step không reset; reuse cho xác suất khớp.
 Tách test phần mềm này khỏi thí nghiệm IMDb. Không tự suy ra model thật có accuracy tốt từ test này.
+
+
+## 7. Đối chiếu với kế hoạch và test case (bổ sung phiên bản 2.0)
+
+**Vị trí trong quy trình:** [Phase 3](../plans/phase3.md) xây dựng/kiểm tra Trainer và chiến lược validation; [Phase 4](../plans/phase4.md) kiểm tra lifecycle train/resume/reuse và artifacts. Nếu sửa config để tối ưu một run mới, tạo `run_id` mới thay vì tái sử dụng checkpoint cũ.
+
+**Test hiện có:** [`tests/03_test_engine.md`](tests/03_test_engine.md) mô tả ENGINE-01 trong code `tests/test_engine.py`. Test này tạo tiny DistilBERT local, train 16 mẫu với batch 4 (4 steps/epoch), dừng sau checkpoint-4 tại epoch 1, resume đạt step 8 ở epoch 2, rồi kiểm tra xác suất reuse với atol=1e-7. Mười điều kiện kiểm tra trong đặc tả vẫn chỉ tạo thành **một pytest case** hiện hữu. Các guard atomic và mismatch độc lập xem [`tests/04_test_utils.md`](tests/04_test_utils.md).
+
+**Tiêu chí hoàn tất:** history có validation metrics, completed chỉ xuất hiện sau khi đủ epoch và save model; dữ liệu test không có trong eval_dataset của Trainer; việc reuse phải có `best_model/model.safetensors`, không thể thực hiện chỉ với `reports/reference_run/` trong ZIP hiện tại. Kết quả quick lịch sử nằm ở `reports/VALIDATION.md`, không phải số liệu từ tiny integration test.

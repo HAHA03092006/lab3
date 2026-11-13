@@ -1,20 +1,60 @@
-# Kiểm thử engine
+# TEST SPEC ENGINE — `going_modular/engine.py`
 
-## Ca tích hợp chính
+> **ID:** LAB3-TENGINE · **Phiên bản:** 2.0 · **Ngày cập nhật:** 11/11/2026  
+> **Test hiện có:** `../../../tests/test_engine.py::test_real_trainer_resume_reuse_roundtrip`  
+> **Phase:** `../../plans/phase3.md`, `../../plans/phase4.md` · **Thiết kế:** `../03_engine.md`.
 
-16 mẫu train, 8 validation, batch 4, target 2 epochs. Tổng optimizer steps=8.
-Callback on_save dừng sau checkpoint đầu ở epoch 1.
+## 1. Mục tiêu và phạm vi
 
-| Bước | Kỳ vọng |
-|---|---|
-| train với callback | InterruptedError vì mới 1/2 epoch |
-| Kiểm tra checkpoint-4 | Có optimizer.pt, chưa có completed.json |
-| resume cùng contract | global_step=8, epoch=2; không bắt đầu lại từ 0 |
-| Export | completed.json, history, best_model và tokenizer |
-| reuse | Không train, xác suất hai câu khớp atol=1e-7 |
-| History | Có đủ 2 lần eval_f1 |
-| train lại cùng folder | FileExistsError |
-| resume khi completed | ValueError |
+Xác minh vòng đời của một run: `train` thật bằng Hugging Face Trainer trên tiny synthetic model → callback dừng sau checkpoint đầu → `resume` từ checkpoint → lưu best model/completed → `reuse` đọc lại weights và giữ xác suất. Có assert về trạng thái, global step, checkpoint optimizer, tính nhất quán history và guard ghi đè; không chỉ mock phương thức. Vì fixture offline tiny model ngẫu nhiên, test không chứng minh độ chính xác IMDb.
 
-Số bước và trạng thái được assert, không chỉ kiểm tra import/hàm trả về.
-Tests chạy CPU offline. Trainer vẫn thực hiện forward/backward/optimizer/scheduler/save/load thật.
+## 2. Fixture, input, expected schedule
+
+- Dataset synthetic raw train=16, validation=8, test=8; training batch=4, eval batch=4.
+- `RunConfig` dùng `run_id='tiny_integration'`, `epochs=2`, `max_length=32`, `gradient_accumulation_steps=1`, save/eval theo epoch.
+- Với 16 train / batch 4: **4 optimizer steps/epoch**, target 2 epochs → **8 steps**.
+- `StopAfterFirstCheckpoint` kế thừa `TrainerCallback`, trong `on_save` đặt `control.should_training_stop=True` khi `state.epoch>=1`.
+- `tmp_path/'artifacts'` và `tmp_path/'logs'` chỉ để test ghi file, không đụng outputs thật của người dùng.
+
+## 3. ENGINE-01 — Vòng đời train/resume/reuse (1 test function, nhiều assertions)
+
+| Giai đoạn | Các bước / điều kiện kích hoạt | Expected output cụ thể | Lỗi được ngăn |
+|---|---|---|---|
+| 1. Train lần đầu | `run_experiment(... action='train', callbacks=[StopAfterFirstCheckpoint()])` | `pytest.raises(InterruptedError)` sau khi lưu checkpoint ở epoch 1 | Không báo completed khi mới hoàn thành 1/2 epochs |
+| 2. Checkpoint | Kiểm `run/checkpoints/checkpoint-4/optimizer.pt` | File tồn tại, `completed.json` **không tồn tại** | Resume thiếu optimizer, completed giả |
+| 3. Resume | `run_experiment(... action='resume')` với contract nguyên | `trainer.state.global_step==8`, `state.epoch==2` | Train lại từ 0/không khôi phục state |
+| 4. Marker | Đọc `run/completed.json` | `global_step==8` | Artifact ghi incomplete thành complete |
+| 5. Predict trước reuse | `predict_texts` trên `good movie`, `bad movie` | Hai hàng xác suất `p_positive` | Sai giao diện infer |
+| 6. Reuse | `run_experiment(... action='reuse')` | Model local nạp thành công, `history == loaded` | Thay đổi history hoặc train ngoài ý muốn |
+| 7. So sánh | `np.allclose` xác suất trước/sau | `atol=1e-7` | Lossy save/reload hoặc head sai |
+| 8. History | Lọc các bản ghi có `eval_f1` | Đúng 2 bản ghi validation F1 | Thiếu epoch evaluation |
+| 9. Guard train | `run_experiment(... action='train')` vào run đã có | `FileExistsError` | Ghi đè artifacts |
+| 10. Guard resume | `run_experiment(... action='resume')` sau completed | `ValueError` | Chạy thừa epoch/đổi trạng thái completed |
+
+**Lưu ý:** 10 hàng bước/điều kiện nằm trong **1** hàm test duy nhất, nên chỉ tính 1 case pytest cho `test_engine.py`.
+
+## 4. Quan sát, acceptance và log lỗi
+
+- Checkpoint từ Trainer phải có optimizer state; `get_last_checkpoint` dùng đường dẫn `checkpoints/checkpoint-*`.
+- `completed.json` chỉ được tạo sau khi train đủ epoch và save best model/tokenizer xong.
+- `reuse` sử dụng `AutoModelForSequenceClassification.from_pretrained(run/'best_model')` và không gọi `trainer.train`.
+- `train/resume/reuse` phải dùng cùng contract: config dict, hash data manifest, tokenizer identity. Guard đơn lẻ được test thêm ở `tests/test_utils.py`.
+- Bản log đầu vào có một warning `mtime may not be reliable on this filesystem`; warning không khiến case fail trong môi trường gốc. Nếu run mới có fail, cần giữ traceback cụ thể.
+
+## 5. Cách chạy
+
+```bash
+python -m pytest tests/test_engine.py -v
+```
+
+Yêu cầu có `torch`, `transformers`, `datasets`, `accelerate` và hỗ trợ save/checkpoint. Dù không cần mạng, integration test sẽ làm forward, backward, checkpoint save/load thật; thời gian chạy tùy máy.
+
+## 6. Kịch bản bổ sung đề xuất — CHƯA TRIỂN KHAI
+
+- ENGINE-P01: `resume` khi không có checkpoint-*: kỳ vọng FileNotFoundError.
+- ENGINE-P02: `reuse` khi thiếu `best_model/model.safetensors`: kỳ vọng FileNotFoundError.
+- ENGINE-P03: thay data hash/tokenizer hash giữa các lần gọi: từ chối contract mismatch.
+- ENGINE-P04: giả lập ngắt tại thời điểm checkpoint đủ epochs nhưng chưa export: yêu cầu quy trình phục hồi minh bạch.
+- ENGINE-P05: thử `gradient_accumulation_steps > 1` và kiểm global_step đúng.
+
+Không gọi các scenario đề xuất là đã được pytest chạy.
