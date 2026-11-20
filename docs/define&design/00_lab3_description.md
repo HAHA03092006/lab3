@@ -66,6 +66,41 @@ Input model: input_ids[B,L], attention_mask[B,L], labels[B]. Output logits[B,2],
 Xem bảng profile ở README; RunConfig.for_profile là nguồn cấu hình.
 `run_id` chỉ gồm chữ/số/_/-. Artifact contract gồm config, digest manifest và danh tính tokenizer.
 Không tự ép action; khi có artifacts người dùng chọn resume/reuse hoặc tên run mới.
+### Sơ đồ cấu hình và vòng đời một run
+
+```mermaid
+flowchart TD
+    A["Chọn profile quick hoặc full"] --> B["Thiết lập run_id và action"]
+    B --> C{"Kiểm tra điều kiện chạy"}
+    C -->|Không hợp lệ| X["Dừng và báo lỗi"]
+    C -->|Hợp lệ| D{"Action đã chọn"}
+    D -->|train| T["Khởi tạo từ model pretrained"]
+    D -->|resume| R["Khôi phục checkpoint gần nhất"]
+    D -->|reuse| U["Nạp best_model và history"]
+    T --> H["Huấn luyện và chọn best validation F1"]
+    R --> H
+    H --> S["Đủ epoch và lưu model cùng tokenizer"]
+    S --> E["Đánh giá test và xuất kết quả"]
+    U --> E
+```
+
+**Cách đọc:** `train` bắt đầu một run mới; `resume` tiếp tục run đang dang dở từ checkpoint;
+`reuse` dùng lại model của run đã hoàn tất và không gọi `trainer.train()`.
+Profile quy định mức dữ liệu và tham số huấn luyện; action quy định cách thực hiện run.
+
+| Action | Điều kiện được kiểm tra | Hành vi |
+|---|---|---|
+| `train` | Thư mục run chưa tồn tại hoặc đang rỗng. | Nạp model pretrained, ghi cấu hình và manifest, huấn luyện run mới. |
+| `resume` | Có `config.json`, contract khớp, chưa có `completed.json`; có checkpoint gần nhất và epoch trong checkpoint chưa đạt số epoch yêu cầu. | Khôi phục trạng thái huấn luyện qua `Trainer.train(resume_from_checkpoint=...)`, học tiếp từ checkpoint. |
+| `reuse` | Có `config.json`, contract khớp; có `completed.json`, `history.json`, cấu hình và trọng số trong `best_model/` cùng cấu hình tokenizer theo kiểm tra của code. | Nạp model đã lưu và history; bỏ qua huấn luyện để dùng lại cho đánh giá hoặc suy luận. |
+
+**Điểm cần lưu ý:**
+- `check_action` và kiểm tra checkpoint trong `run_experiment` chặn run không hợp lệ; không tự xóa dữ liệu cũ hoặc tự đổi action.
+- Chọn checkpoint tốt nhất bằng **F1 Positive trên validation**. Notebook gọi đánh giá test sau bước này; test không dùng để chọn checkpoint.
+- Chỉ ghi `completed.json` sau khi huấn luyện đủ epoch và lưu model/tokenizer thành công. Nếu dừng sớm, chỉ có thể resume khi đã có checkpoint được lưu; cấu hình hiện tại lưu checkpoint theo epoch.
+
+**Đối chiếu code:** `going_modular/config.py` (`RunConfig.for_profile`), `going_modular/utils.py` (`check_action`),
+`going_modular/engine.py` (`run_experiment`) và notebook mục 4–6.
 
 ## 8. Tiêu chí nghiệm thu
 

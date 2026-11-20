@@ -1,13 +1,13 @@
-# Practice 3 - Get started with Hugging Face
+# Thực hành 3 – Làm quen với Hugging Face
 
-## Exercise 1: Sentiment Analysis with Hugging Face
+## Bài tập 1: Phân tích cảm xúc với Hugging Face
 
-1. Install the Hugging Face `transformers` library.
-2. Use a pre-trained sentiment analysis model from the Hugging Face Hub.
-3. Tokenize a sample sentence.
-4. Perform sentiment analysis on the sentence.
+1. Cài đặt thư viện `transformers` của Hugging Face.
+2. Sử dụng một mô hình phân tích cảm xúc đã được huấn luyện sẵn từ Hugging Face Hub.
+3. Tokenize một câu mẫu.
+4. Thực hiện phân tích cảm xúc trên câu đó.
 
-### References
+### Tài liệu tham khảo
 
 - https://huggingface.co/docs/transformers/en/training#fine-tune-a-pretrained-model
 - https://huggingface.co/blog/sentiment-analysis-python
@@ -16,14 +16,18 @@
 
 ---
 
-## Exercise 2: Finetuning a Pretrained Model for Binary Text Classification
+## Bài tập 2: Fine-tune mô hình pretrained cho bài toán phân loại văn bản nhị phân
 
-In this exercise, you will:
+Trong bài tập này, bạn sẽ:
 
-1. Install the necessary Hugging Face libraries (`transformers`, `datasets`, `evaluate`).
-2. Load a simple dataset for binary text classification.
-3. Load a pretrained model and its tokenizer.
-4. Preprocess the dataset to be suitable for the model.
-5. Define training arguments.
-6. Create a `Trainer` object and finetune the model.
-7. Evaluate the finetuned model.
+1. Cài đặt các thư viện Hugging Face cần thiết (`transformers`, `datasets`, `evaluate`).
+2. Tải một bộ dữ liệu đơn giản cho bài toán phân loại văn bản nhị phân.
+3. Tải một mô hình pretrained và tokenizer của nó.
+4. Tiền xử lý bộ dữ liệu cho phù hợp với mô hình.
+5. Định nghĩa các tham số huấn luyện (training arguments).
+6. Tạo đối tượng `Trainer` và fine-tune mô hình.
+7. Đánh giá mô hình sau khi fine-tune.
+
+---
+
+*Ghi chú: các thuật ngữ kỹ thuật như tokenize, fine-tune, pretrained, `Trainer` được giữ nguyên để khớp với kịch bản thuyết trình và tài liệu của dự án.*

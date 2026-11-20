@@ -26,8 +26,6 @@ Kế hoạch chia quá trình thành 8 phase nhỏ, có **công việc/đầu ra
 | P6 | Notebook và thuyết minh | P2–P5 | Notebook đầy đủ bước, báo cáo số liệu thật | Không có số liệu tưởng tượng |
 | P7 | Kiểm thử, kiểm tra và bàn giao | P0–P6 | Test log, biên bản, cấu trúc repo | Tiêu chí nghiệm thu đáp ứng |
 
-> **Chú ý:** Bảng trên mô tả thứ tự xây dựng/kiểm tra; các file Python, notebook và kết quả quick đã có trong ZIP đầu vào. Không suy ra rằng tất cả checklist đã được chạy lại trong phiên sửa tài liệu này.
-
 ## 3. Danh sách kế hoạch chi tiết
 
 | Kế hoạch | Trọng tâm | Đầu mối code/test |
